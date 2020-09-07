@@ -13,7 +13,7 @@ public class Receiver {
     int port = 8888;
 
     // Get the directory that files should be written into
-    File writeDir = new File("/home/nfs/dellsworth/fxfer/svr");
+    File writeDir = new File("../../../received");
     if (!writeDir.canWrite()) {
       System.out.println("Can't write to directory... exiting");
     }
