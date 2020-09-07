@@ -1,3 +1,4 @@
+package Client;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
