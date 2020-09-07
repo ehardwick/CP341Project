@@ -1,5 +1,4 @@
 package Client;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
@@ -12,10 +11,10 @@ public class ChatTitlePanel extends JPanel implements ChangeListener {
 
   public ChatTitlePanel() {
     JPanel panel = new JPanel();
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     JTextArea textArea = new JTextArea("Chat with Alice");
     textArea.setOpaque(false);
     textArea.setEditable(false);
+    textArea.setFocusable(false);
     panel.add(textArea);
     add(panel);
   }

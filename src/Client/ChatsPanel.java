@@ -1,7 +1,6 @@
 package Client;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -22,7 +21,6 @@ public class ChatsPanel extends JPanel implements ChangeListener {
     String data[][] = {{"Chat 1"}, {"Chat 2"},};
     String column[] = {"Chats"};
     JTable jt = new JTable(data, column);
-    jt.setBounds(30, 40, 20, 30);
     jt.changeSelection(jt.getRowCount() - 1, 0, false, false);
     jt.setCellSelectionEnabled(false);
     JScrollPane sp = new JScrollPane(jt);

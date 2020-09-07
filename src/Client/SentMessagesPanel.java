@@ -1,6 +1,4 @@
 package Client;
-import java.awt.GridLayout;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -11,8 +9,6 @@ public class SentMessagesPanel extends JPanel implements ChangeListener {
 
   public SentMessagesPanel() {
     JPanel panel = new JPanel();
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    setLayout(new GridLayout(1, 2, 30, 10));
     String data[][] = {{"Alice Text Message 1", ""}, {"", "Bob Text Message 1"},
         {"Alice Text Message 2", ""}, {"Alice Text Message 3", ""}, {"", "Bob Text Message 2"},
         {"Alice Text Message 4", ""}, {"", "Bob Text Message 3"}, {"Alice Text Message 5", ""},};

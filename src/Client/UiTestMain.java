@@ -19,6 +19,7 @@ public class UiTestMain extends JFrame {
 
   public static void main(String[] args) {
     UiTestMain uiTest = new UiTestMain();
+    uiTest.test(uiTest.getContentPane());
   }
 
   public UiTestMain() {
@@ -35,37 +36,48 @@ public class UiTestMain extends JFrame {
     this.inputPanel = new InputPanel();
     this.chatsPanel = new ChatsPanel(sentMessagesPanel, inputPanel);
     this.chatTitlePanel = new ChatTitlePanel();
-    
-    test(this.getContentPane());
-
   }
 
   public void test(Container pane) {
- 
-    // 🤌 spaghetti 🤌
+
+    /**
+     * 🤌 spaghetti 🤌
+     */
+
     gbc.fill = GridBagConstraints.VERTICAL;
     gbc.gridx = 0;
     gbc.gridy = 0;
     gbc.gridwidth = 1;
     gbc.gridheight = 6;
+    gbc.weightx = 0.0;
+    gbc.weighty = 1.0;
     this.add(chatsPanel, gbc);
+
+    gbc.fill = GridBagConstraints.HORIZONTAL;
     gbc.gridx = 1;
     gbc.gridy = 0;
-    gbc.gridwidth = 3;
+    gbc.gridwidth = 10;
     gbc.gridheight = 1;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.weightx = 1.0;
+    gbc.weighty = 0.0;
     this.add(chatTitlePanel, gbc);
+
+    gbc.fill = GridBagConstraints.BOTH;
     gbc.gridx = 1;
     gbc.gridy = 1;
-    gbc.gridwidth = 3;
+    gbc.gridwidth = 10;
     gbc.gridheight = 4;
-    gbc.fill = GridBagConstraints.BOTH;
+    gbc.weightx = 1.0;
+    gbc.weighty = 1.0;
     this.add(sentMessagesPanel, gbc);
+
+    gbc.fill = GridBagConstraints.HORIZONTAL;
     gbc.gridx = 1;
     gbc.gridy = 6;
-    gbc.gridwidth = 3;
+    gbc.gridwidth = 10;
     gbc.gridheight = 1;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.weightx = 1.0;
+    gbc.weighty = 0.0;
     this.add(inputPanel, gbc);
 
     pack();
