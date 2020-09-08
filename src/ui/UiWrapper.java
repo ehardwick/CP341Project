@@ -1,4 +1,4 @@
-package client;
+package ui;
 
 import java.awt.Container;
 import java.awt.GridBagLayout;

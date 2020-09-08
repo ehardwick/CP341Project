@@ -1,4 +1,4 @@
-package Server;
+package client;
 
 import java.net.Socket;
 import java.io.File;
@@ -6,7 +6,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 
-public class Sender {
+public class Client {
   /**
    * Scans a directory for the next file we can transmit
    * 

@@ -1,4 +1,4 @@
-package client;
+package ui;
 
 import java.util.List;
 import javax.swing.DefaultListModel;

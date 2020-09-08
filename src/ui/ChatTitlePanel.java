@@ -1,4 +1,4 @@
-package client;
+package ui;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
