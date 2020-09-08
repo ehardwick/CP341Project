@@ -2,11 +2,7 @@ package client;
 
 import java.awt.Container;
 import java.awt.GridBagLayout;
-import java.util.ArrayList;
-import java.util.Date;
 import javax.swing.JFrame;
-import util.Message;
-import util.MessageThread;
 import util.User;
 import java.awt.GridBagConstraints;
 
@@ -25,8 +21,7 @@ public class UiWrapper extends JFrame {
 
   public static void main(String[] args) {
     UiWrapper uiTest = new UiWrapper();
-    uiTest.test(uiTest.getContentPane());
-    uiTest.addTestData();
+    uiTest.addPanels(uiTest.getContentPane());
   }
 
   public UiWrapper() {
@@ -50,12 +45,7 @@ public class UiWrapper extends JFrame {
     this.chatTitlePanel = new ChatTitlePanel();
   }
 
-  public void test(Container pane) {
-
-    /**
-     * 🤌 spaghetti 🤌
-     */
-
+  public void addPanels(Container pane) {
     gbc.fill = GridBagConstraints.VERTICAL;
     gbc.gridx = 0;
     gbc.gridy = 0;
@@ -94,60 +84,5 @@ public class UiWrapper extends JFrame {
 
     pack();
     setVisible(true);
-  }
-//  SentMessagesPanel sentMessagesPanel;
-//  InputPanel inputPanel;
-//  ChatsPanel chatsPanel;
-//  ChatTitlePanel chatTitlePanel;
-  private void addTestData() {
-    User alice = new User.Builder()
-        .withUserId(12345)
-        .withUsername("alice username")
-        .build();
-    
-    User bob = new User.Builder()
-        .withUserId(1)
-        .withUsername("bob username")
-        .build();
-    
-    ArrayList<User> owners = new ArrayList<>();
-    
-    MessageThread thread = new MessageThread.Builder()
-        .withMessageThreadId(123l)
-        .withOwners(owners)
-        .build();
-    
-    Message firstMessage = new Message.Builder()
-        .withSender(bob)
-        .withTextBody("bob's text body 1")
-        .withTimeSent(new Date())
-        .build();
-    
-    thread.addMessage(firstMessage);
-    
-    Message secondMessage = new Message.Builder()
-        .withSender(bob)
-        .withTextBody("bob's text body 1")
-        .withTimeSent(new Date())
-        .build();
-    
-    thread.addMessage(secondMessage);
-    
-    Message thirdMessage = new Message.Builder()
-        .withSender(alice)
-        .withTextBody("alice's text body 1")
-        .withTimeSent(new Date())
-        .build();
-    
-    thread.addMessage(thirdMessage);
-    
-    sentMessagesPanel.setMessageThread(thread);
-    
-    chatsPanel.add("chat 1");
-        
-    invalidate();
-    validate();
-    repaint();
-    
   }
 }

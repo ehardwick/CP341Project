@@ -3,7 +3,20 @@ package util;
 import java.util.Date;
 
 public class Message {
-  private boolean sent = false;
+
+  public enum Status {
+    UNSENT, SENDING, SENT, RECIEVED {
+      @Override
+      public Status next() {
+        return this;
+      };
+    };
+    public Status next() {
+      return values()[ordinal() + 1];
+    }
+  }
+
+  private Status status = Status.UNSENT;
   private User sender;
   private Date timeSent;
   private String textBody;
@@ -37,8 +50,12 @@ public class Message {
     }
   }
 
-  public boolean getSent() {
-    return sent;
+  public Status getStatus() {
+    return status;
+  }
+
+  public void nextStatus() {
+    status.next();
   }
 
   public User getSender() {
