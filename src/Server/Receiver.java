@@ -13,7 +13,7 @@ public class Receiver {
     int port = 8888;
 
     // Get the directory that files should be written into
-    File writeDir = new File("../../../received");
+    File writeDir = new File("./");
     if (!writeDir.canWrite()) {
       System.out.println("Can't write to directory... exiting");
     }
@@ -78,6 +78,5 @@ public class Receiver {
       client.getOutputStream().write((byte) 1);
       client.close();
     }
-
   }
 }
