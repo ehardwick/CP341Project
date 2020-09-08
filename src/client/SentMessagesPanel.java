@@ -13,7 +13,6 @@ import util.User;
 public class SentMessagesPanel extends JPanel {
 
   private DefaultTableModel tableModel;
-  private MessageThread messageThread;
   private User user;
   private JTable table;
 
@@ -22,24 +21,30 @@ public class SentMessagesPanel extends JPanel {
     this.table = new JTable(tableModel);
     this.user = user;
 
-    table.setBounds(30, 40, 200, 300);
     table.setCellSelectionEnabled(false);
     JScrollPane scrollPane = new JScrollPane(table);
-
     add(scrollPane);
   }
 
   public void setMessageThread(MessageThread messageThread) {
     List<Message> messages = messageThread.getMessages();
-    System.out.println(messages.size());
+    String formattedMessage;
     for (Message message : messages) {
+      formattedMessage = message.getTextBody() + " (" + message.getStatus() + ")";
       if (user.getUserId() == message.getSender().getUserId()) {
-        tableModel.addRow(new Object[] {"", message.getTextBody()});
+        addFromMessage(formattedMessage);
       } else {
-        tableModel.addRow(new Object[] {message.getTextBody(), ""});
+        addToMessage(formattedMessage);
       }
     }
-    this.messageThread = messageThread;
     table.changeSelection(table.getRowCount() - 1, 0, false, false);
+  }
+
+  private void addFromMessage(String message) {
+    tableModel.addRow(new Object[] {"", message});
+  }
+
+  private void addToMessage(String message) {
+    tableModel.addRow(new Object[] {message, ""});
   }
 }
