@@ -7,12 +7,13 @@ import util.MessageThread;
 
 @SuppressWarnings("serial")
 public class ChatTitlePanel extends JPanel implements MessageThreadObserver {
-  private String chatTitle = "Chat Title";
+  private static final String DEFAULT_CHAT_TITLE = "Chat Title";
   private LocalStorage localStorage;
+  private JTextArea textArea;
 
   public ChatTitlePanel(LocalStorage localStorage) {
     this.localStorage = localStorage;
-    JTextArea textArea = new JTextArea(chatTitle);
+    this.textArea = new JTextArea(DEFAULT_CHAT_TITLE);
     textArea.setOpaque(false);
     textArea.setEditable(false);
     textArea.setFocusable(false);
@@ -22,13 +23,13 @@ public class ChatTitlePanel extends JPanel implements MessageThreadObserver {
 
   @Override
   public void addNewMessageThread(MessageThread newThread) {
-   // nothing yet will want to switch automaticaly
-    
+    // nothing yet will want to switch automaticaly
+
   }
 
   @Override
   public void threadSwitched(long messageThreadId) {
     Optional<MessageThread> switchedToThread = localStorage.getMessageThreadById(messageThreadId);
-    switchedToThread.ifPresent(thread -> chatTitle = thread.getName());
+    switchedToThread.ifPresent(thread -> textArea.setText(thread.getName()));
   }
 }

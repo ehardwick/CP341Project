@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import client.Client;
 import util.Message;
 import util.MessageThread;
 import util.User;
@@ -12,7 +13,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   // Locally cached versions of info stored by server
   private Map<Long, MessageThread> messageThreads;
   private Map<Long, User> users;
-  private Map<Long, String> messageNames;
   private Map<Long, List<MessageThread>> userMessageThreads;
 
   
@@ -21,6 +21,7 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   private long selectedThreadId;
   
   private ServerStub serverStub;
+  private Client client;
 
   public static class Builder {
     // Locally cached versions of info stored by server
@@ -74,7 +75,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
       LocalStorage localStorage = new LocalStorage();
       localStorage.messageThreads = this.messageThreads;
       localStorage.users = this.users;
-      localStorage.messageNames = this.messageNames;
       localStorage.userMessageThreads = this.userMessageThreads;
       localStorage.clientUser = this.clientUser;
       localStorage.selectedThreadId = this.selectedThreadId;
@@ -82,6 +82,11 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
 
       return localStorage;
     }
+  }
+  
+  public LocalStorage() {
+    this.client = new Client();
+    client.start();
   }
   
   /*
@@ -176,7 +181,7 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   @Override
   public void sendNewMessage(Message newMessage) {
     // Send the message to the server to be delivered and added to the server messageThread
-    boolean accepted = serverStub.sendMessage(newMessage, messageThreads.get(selectedThreadId).getMessageThreadId());
+    boolean accepted = client.sendMessage("sending message with text: " + newMessage.getTextBody() + " from " + newMessage.getSender().getUsername() + " to thread " + selectedThreadId + " with name " + messageThreads.get(selectedThreadId).getName());
     // if accepted add the new message to the locally stored messageThread
     if(accepted) {
       messageThreads.get(selectedThreadId).addMessage(newMessage);

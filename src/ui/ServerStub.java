@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import client.Client;
 import util.Message;
 import util.MessageThread;
 import util.User;
@@ -190,10 +191,5 @@ public class ServerStub {
         .withOwners(owners)
         .withName(title)
         .build());
-  }
-  
-  public boolean sendMessage(Message message, long messageThreadId) {
-    System.out.println("this isn't implemented, always returns true (success)");
-    return true;
   }
 }

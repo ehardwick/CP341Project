@@ -40,6 +40,7 @@ public class InputPanel extends JPanel implements ChangeListener {
             .build();
         
         messageObservers.forEach(observer -> observer.sendNewMessage(newMessage));
+        textField.setText("");
       }
     });
     add(send);
