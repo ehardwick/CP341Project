@@ -37,13 +37,23 @@ public class ChatsPanel extends JPanel {
     BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
     setLayout(boxLayout);
 
-    JButton createNew = new JButton("Create New");
+    JButton createNew = new JButton("Create New Chat");
     createNew.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         String ownersStr =
             JOptionPane.showInputDialog(container, "Owners: (user1, user2...)", null);
         String title = JOptionPane.showInputDialog(container, "Title", ownersStr);
         createNewMessageThread(ownersStr, title);
+      }
+    });
+    
+    JButton addNewContact = new JButton("Add New Contact");
+    addNewContact.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        String contactName =
+            JOptionPane.showInputDialog(container, "Name: ", null);
+        String userId = JOptionPane.showInputDialog(container, "UserId:", null);
+        localStorage.addNewContact(contactName, Long.parseLong(userId));
       }
     });
 
@@ -66,6 +76,7 @@ public class ChatsPanel extends JPanel {
     jList.setAlignmentX(jList.getAlignmentX() - 20);
 
     add(createNew);
+    add(addNewContact);
     add(jList);
   }
 

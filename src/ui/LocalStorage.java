@@ -183,4 +183,9 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
     }
   }
 
+  public void addNewContact(String contactName, long contactId) {
+    clientUser.getContacts().put(contactName, contactId);
+    // Let server know about the new contact and know to update it's list of contacts for the clientUser
+  }
+
 }
