@@ -39,7 +39,7 @@ public class InputPanel extends JPanel implements ChangeListener {
             .withTimeSent(new Date())
             .build();
         
-        messageObservers.forEach(observer -> observer.newMessage(newMessage));
+        messageObservers.forEach(observer -> observer.sendNewMessage(newMessage));
       }
     });
     add(send);
@@ -51,7 +51,7 @@ public class InputPanel extends JPanel implements ChangeListener {
 
   @Override
   public void stateChanged(ChangeEvent e) {
-    messageObservers.forEach(observer -> observer.newMessage(new Message()));
+    messageObservers.forEach(observer -> observer.sendNewMessage(new Message()));
   }
 
 }

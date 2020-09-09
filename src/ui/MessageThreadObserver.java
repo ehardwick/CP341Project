@@ -3,5 +3,7 @@ package ui;
 import util.MessageThread;
 
 public interface MessageThreadObserver {
-  public void threadSwitched(MessageThread newThread);
-}
+  public void threadSwitched(long messageThreadId);
+
+  public void addNewMessageThread(MessageThread newThread);
+ }

@@ -3,7 +3,9 @@ package ui;
 import java.awt.Container;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JFrame;
 import util.MessageThread;
 import util.User;
@@ -34,21 +36,26 @@ public class UiFrame extends JFrame {
 
     ServerStub fakeServer = new ServerStub();
     
-    ChatLogDB chatLogDB = new ChatLogDB.Builder()
-        .withMessageThreads(fakeServer.getMessageThreads(user))
+    Map<Long, String> messageNames = fakeServer.getMessageThreadNamesForUser(user.getUserId()).get();
+    Map<Long, MessageThread> messageThreads = new HashMap<>();
+    fakeServer.getMessageThreadsByUser(user.getUserId()).get().forEach(thread -> messageThreads.put(thread.getMessageThreadId(), thread));
+    LocalStorage localStorage = new LocalStorage.Builder()
         .withUser(user)
         .withServerStub(fakeServer)
+        .withMessageNames(messageNames)
+        .withMessageThreads(messageThreads)
+        .withUsers(fakeServer.getUsers())
         .build();
         
-    this.sentMessagesPanel = new SentMessagesPanel(user);
+    this.sentMessagesPanel = new SentMessagesPanel(localStorage);
     this.inputPanel = new InputPanel(user);
-    this.chatsPanel = new ChatsPanel(chatLogDB);
-    chatsPanel.setMessageThreads(fakeServer.getMessageThreadsByUser(user));
-    this.chatTitlePanel = new ChatTitlePanel();
+    this.chatsPanel = new ChatsPanel(localStorage);
+    chatsPanel.setMessageThreads(fakeServer.getMessageThreadsByUser(user).get());
+    this.chatTitlePanel = new ChatTitlePanel(localStorage);
 
     // Message Observers (Updated when a new message is requested to be sent by the user
     List<MessageObserver> messageObservers = new ArrayList<>();
-    messageObservers.add(chatLogDB);
+    messageObservers.add(localStorage);
     messageObservers.add(sentMessagesPanel);
     inputPanel.setMessageObservers(messageObservers);
 
@@ -56,7 +63,7 @@ public class UiFrame extends JFrame {
     List<MessageThreadObserver> messageThreadObservers = new ArrayList<>();
     messageThreadObservers.add(sentMessagesPanel);
     messageThreadObservers.add(chatTitlePanel);
-    messageThreadObservers.add(chatLogDB);
+    messageThreadObservers.add(localStorage);
     chatsPanel.setMessageThreadObservers(messageThreadObservers);
 
     pack();

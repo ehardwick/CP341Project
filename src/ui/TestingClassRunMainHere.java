@@ -1,10 +1,7 @@
 package ui;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import util.Message;
-import util.MessageThread;
+import java.util.HashMap;
+import java.util.Map;
 import util.User;
 
 /**
@@ -22,11 +19,16 @@ public class TestingClassRunMainHere {
   }
 
   public void trueMain() {
-    ServerStub fakeServer = new ServerStub();
+    Map<String, Long> contacts = new HashMap<>();
+    contacts.put("Alice", 1l);
+    contacts.put("Bob", 2l);
+    
     User bob = new User.Builder()
-        .withUserId(1)
-        .withUsername("bob username")
+        .withUserId(2)
+        .withUsername("Bob")
+        .withContacts(contacts)
         .build();
+    
     uiTest = new UiFrame(bob);
     
     uiTest.addPanels(uiTest.getContentPane());
