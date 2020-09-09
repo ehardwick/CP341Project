@@ -1,98 +1,69 @@
 package server;
 
-import java.io.File;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Server {
-  public static void main(String[] args) throws Exception {
-    // Get the port number to listen to...
-    int port1 = 8888;
-    int port2 = 8080;
 
-    // Get the directory that files should be written into
-//    File writeDir = new File("./");
-//    if (!writeDir.canWrite()) {
-//      System.out.println("Can't write to directory... exiting");
-//    }
+  private static Set<PrintWriter> writers = new HashSet<>();
+  static final int PORT = 8888;
 
-    // Make the server socket
-    ServerSocket c1_socket = new ServerSocket(port1);
-    ServerSocket c2_socket = new ServerSocket(port2);
-    
-    while (true) {
-      // Listen and accept client connection
-      Socket client1 = c1_socket.accept();
-      Socket client2 = c2_socket.accept();
-      
-      // Print what the Client sends
-      byte[] bytes = new byte[1000];
-      int rlen;
-      rlen = client1.getInputStream().read(bytes);
-      for(int i=0; i<rlen; i++) {
-    	  System.out.println(bytes[i]);
+  public static void main(String[] args) {
+    System.out.println(String.format("Server is online, listening on port %s", PORT));
+    Socket socket;
+    try {
+      ServerSocket serverSocket = new ServerSocket(PORT);
+      while (true) {
+        socket = serverSocket.accept();
+        new ClientThread(socket).start();
       }
-      
-      // Send bytes to client2
-      client2.getOutputStream().write(bytes);
-      
-      // Read the file size and filename
-      // Read the first integer (4 bytes) for the file size
-//      ByteBuffer bb = ByteBuffer.allocate(1000);
-//      byte[] bytes = new byte[1000];
-//      int actuallyRead = client.getInputStream().read(bytes, 0, 4);
-//      while (actuallyRead < 4) {
-//        actuallyRead += client.getInputStream().read(bytes, actuallyRead, 4 - actuallyRead);
-//      }
-//      bb.put(bytes);
-//      for (int i = 0; i < 4; i++) {
-//        System.err.println("bytes[" + i + "] = " + bytes[i]);
-//      }
-//      bb.rewind();
-//      int filelen = bb.getInt(0);
-//      System.err.println("File len of " + filelen);
-//
-//      // Read bytes until the null character (byte with value 0) for the
-//      // filename, and convert to a String...
-//      bb.mark();
-//      int r;
-//      int br = 4;
-//      while ((r = client.getInputStream().read()) != 0) {
-//        bb.put((byte) r);
-//        br++;
-//      }
-//      System.out.println("Read " + br + " bytes of filename");
-//      byte[] namebytes = new byte[bb.position()];
-//      bb.reset();
-//      bb.get(namebytes);
-//      String filename = new String(namebytes);
-//
-//      System.out.println("Request to send " + filename + " with length " + filelen);
-//
-//      // ACK the req to send
-//      client.getOutputStream().write((byte) 1);
-//
-//      // Write to disk... in the right directory...
-//      File writeFile = new File(writeDir, filename);
-//      FileOutputStream fstream = new FileOutputStream(writeFile);
-//
-//      // actual writing
-//      // Read the bytes for the file
-//      InputStream in = client.getInputStream();
-//
-//      for (int i = 0; i < filelen; i++) {
-//        fstream.write(in.read());
-//      }
-//
-//      // close the file
-//      fstream.close();
-//
-//      // ACK the file
-//      client.getOutputStream().write((byte) 1);
-//      client.close();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to connect to new Server Socket", e);
+    }
+  }
+
+  private static class ClientThread extends Thread {
+
+    // Socket used for a conversation
+    private final Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+
+    public ClientThread(Socket socket) {
+      this.socket = socket;
+    }
+
+    public void run() {
+      try {
+        out = new PrintWriter(socket.getOutputStream(), true);
+        writers.add(out);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to Initialize IO Streams", e);
+      }
+
+      String message;
+      while (true) {
+        try {
+          message = in.readLine();
+          if ((message == null) || message.equals("DISCONNECT")) {
+            socket.close();
+            return;
+          } else {
+            for (PrintWriter writer : writers) {
+              writer.println(message);
+            }
+          }
+        } catch (IOException e) {
+          throw new RuntimeException("Failed to Process Message", e);
+        }
+      }
     }
   }
 }
