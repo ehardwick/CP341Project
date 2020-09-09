@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import client.Client;
 import util.Message;
 import util.MessageThread;
 import util.User;
@@ -15,14 +14,12 @@ public class ServerStub {
 
   // Server has all the message threads and all the users
   private Map<Long, MessageThread> messageThreads;
-  private Map<Long, String> messageThreadNames;
   private Map<Long, User> users;
   private Map<Long, List<MessageThread>> userMessageThreads;
 
   public ServerStub() {
     // initialize the maps
     messageThreads = new HashMap<>();
-    messageThreadNames = new HashMap<>();
     users = new HashMap<>();
     userMessageThreads = new HashMap<>();
     
@@ -125,9 +122,6 @@ public class ServerStub {
         userMessageThreads.put(o.getUserId(),threads);
       }
     }));
-    
-    // initialize messageNames with testing data
-    messageThreads.forEach((k,v) -> messageThreadNames.put(k, v.getName()));
   }
 
   /*

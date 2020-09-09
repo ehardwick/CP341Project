@@ -25,6 +25,7 @@ public class UiFrame extends JFrame {
   InputPanel inputPanel;
   ChatsPanel chatsPanel;
   ChatTitlePanel chatTitlePanel;
+  UserInfoPanel userInfoPanel;
 
   public UiFrame(User user) {
     this.user = user;
@@ -52,6 +53,7 @@ public class UiFrame extends JFrame {
     this.chatsPanel = new ChatsPanel(localStorage);
     chatsPanel.setMessageThreads(fakeServer.getMessageThreadsByUser(user).get());
     this.chatTitlePanel = new ChatTitlePanel(localStorage);
+    this.userInfoPanel = new UserInfoPanel(localStorage);
 
     // Message Observers (Updated when a new message is requested to be sent by the user
     List<MessageObserver> messageObservers = new ArrayList<>();
@@ -64,6 +66,7 @@ public class UiFrame extends JFrame {
     messageThreadObservers.add(sentMessagesPanel);
     messageThreadObservers.add(chatTitlePanel);
     messageThreadObservers.add(localStorage);
+    messageThreadObservers.add(inputPanel);
     chatsPanel.setMessageThreadObservers(messageThreadObservers);
 
     pack();
@@ -110,6 +113,15 @@ public class UiFrame extends JFrame {
     gbc.weightx = 1.0;
     gbc.weighty = 0.0;
     this.add(inputPanel, gbc);
+    
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.gridx = 0;
+    gbc.gridy = 6;
+    gbc.gridwidth = 1;
+    gbc.gridheight = 1;
+    gbc.weightx = 1.0;
+    gbc.weighty = 0.0;
+    this.add(userInfoPanel, gbc);
 
     pack();
     setVisible(true);
