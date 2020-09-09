@@ -10,11 +10,11 @@ import util.MessageThread;
 import util.User;
 
 @SuppressWarnings("serial")
-public class SentMessagesPanel extends JPanel {
+public class SentMessagesPanel extends JPanel implements MessageObserver, MessageThreadObserver {
 
   private DefaultTableModel tableModel;
-  private User user;
   private JTable table;
+  private User user;
 
   public SentMessagesPanel(User user) {
     this.tableModel = new DefaultTableModel(new Object[] {"", ""}, 1);
@@ -26,9 +26,21 @@ public class SentMessagesPanel extends JPanel {
     add(scrollPane);
   }
 
-  public void setMessageThread(MessageThread messageThread) {
-    List<Message> messages = messageThread.getMessages();
+  private void addFromMessage(String message) {
+    tableModel.addRow(new Object[] {"", message});
+  }
+
+  private void addToMessage(String message) {
+    tableModel.addRow(new Object[] {message, ""});
+  }
+
+  @Override
+  public void threadSwitched(MessageThread newThread) {
+    List<Message> messages = newThread.getMessages();
     String formattedMessage;
+
+    this.tableModel.setRowCount(0);
+
     for (Message message : messages) {
       formattedMessage = message.getTextBody() + " (" + message.getStatus() + ")";
       if (user.getUserId() == message.getSender().getUserId()) {
@@ -38,13 +50,16 @@ public class SentMessagesPanel extends JPanel {
       }
     }
     table.changeSelection(table.getRowCount() - 1, 0, false, false);
+
   }
 
-  private void addFromMessage(String message) {
-    tableModel.addRow(new Object[] {"", message});
-  }
-
-  private void addToMessage(String message) {
-    tableModel.addRow(new Object[] {message, ""});
+  @Override
+  public void newMessage(Message newMessage) {
+    String formattedMessage = newMessage.getTextBody() + " (" + newMessage.getStatus() + ")";
+    if (user.getUserId() == newMessage.getSender().getUserId()) {
+      addFromMessage(formattedMessage);
+    } else {
+      addToMessage(formattedMessage);
+    }
   }
 }

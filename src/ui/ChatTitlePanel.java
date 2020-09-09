@@ -2,25 +2,24 @@ package ui;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import util.MessageThread;
 
 @SuppressWarnings("serial")
-public class ChatTitlePanel extends JPanel {
+public class ChatTitlePanel extends JPanel implements MessageThreadObserver {
 
   private String chatTitle = "Chat Title";
 
   public ChatTitlePanel() {
-    JPanel panel = new JPanel();
-
     JTextArea textArea = new JTextArea(chatTitle);
     textArea.setOpaque(false);
     textArea.setEditable(false);
     textArea.setFocusable(false);
 
-    panel.add(textArea);
-    add(panel);
+    add(textArea);
   }
-
-  public void setChatTitle(String chatTitle) {
-    this.chatTitle = chatTitle;
+  
+  @Override
+  public void threadSwitched(MessageThread newThread) {
+    chatTitle = newThread.getName();
   }
 }
