@@ -23,18 +23,13 @@ public class ServerStub {
     users = new HashMap<>();
     userMessageThreads = new HashMap<>();
     
-    Map<String, Long> contacts = new HashMap<>();
-    contacts.put("Alice", 1l);
-    contacts.put("Bob", 2l);
     // initialize some users for testing
     User alice = new User.Builder()
         .withUsername("Alice")
-        .withContacts(contacts)
         .build();
     
     User bob = new User.Builder()
         .withUsername("Bob")
-        .withContacts(contacts)
         .build();
     
     users.put(alice.getUsername(), alice);

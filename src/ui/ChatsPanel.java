@@ -6,8 +6,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import util.Message;
 import util.MessageThread;
 
 @SuppressWarnings("serial")
@@ -27,7 +24,6 @@ public class ChatsPanel extends JPanel {
 
   private List<MessageThreadObserver> messageThreadObservers;
   private JList<String> jList;
-  private List<MessageThread> messageThreads;
   private final DefaultListModel<String> model = new DefaultListModel<String>();
   private LocalStorage localStorage;
 
@@ -46,25 +42,16 @@ public class ChatsPanel extends JPanel {
         createNewMessageThread(ownersStr, title);
       }
     });
-    
-    JButton addNewContact = new JButton("Add New Contact");
-    addNewContact.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        String contactName =
-            JOptionPane.showInputDialog(container, "Name: ", null);
-        String userId = JOptionPane.showInputDialog(container, "UserId:", null);
-        localStorage.addNewContact(contactName, Long.parseLong(userId));
-      }
-    });
 
     this.jList = new JList<String>(model);
     ListSelectionListener listSelectionListener = new ListSelectionListener() {
       public void valueChanged(ListSelectionEvent listSelectionEvent) {
         if (!listSelectionEvent.getValueIsAdjusting()) {
-          JList list = (JList) listSelectionEvent.getSource();
-          Map<Long,MessageThread> threads = localStorage.getMessageThreads();
-          threads.forEach((k,v) -> {
-            if(v.getName().equals(list.getSelectedValue())) {
+          @SuppressWarnings("unchecked")
+          JList<String> list = (JList<String>) listSelectionEvent.getSource();
+          Map<Long, MessageThread> threads = localStorage.getMessageThreads();
+          threads.forEach((k, v) -> {
+            if (v.getName().equals(list.getSelectedValue())) {
               setActive(v.getMessageThreadId());
             }
           });
@@ -76,16 +63,16 @@ public class ChatsPanel extends JPanel {
     jList.setAlignmentX(jList.getAlignmentX() - 20);
 
     add(createNew);
-    add(addNewContact);
     add(jList);
   }
 
   private void createNewMessageThread(String owners, String title) {
     String[] ownersArr = owners.split(", ");
-    
+
     List<String> ownersList = Arrays.asList(ownersArr);
-    
-    Optional<MessageThread> newMessageThread = localStorage.createNewMessageThread(ownersList, title);
+
+    Optional<MessageThread> newMessageThread =
+        localStorage.createNewMessageThread(ownersList, title);
     newMessageThread.ifPresent(thread -> {
       messageThreadObservers.forEach(observer -> observer.addNewMessageThread(thread));
       model.addElement(thread.getName());
@@ -93,7 +80,6 @@ public class ChatsPanel extends JPanel {
   }
 
   public void setMessageThreads(List<MessageThread> messageThreads) {
-    this.messageThreads = messageThreads;
     List<String> messageThreadsNames = new ArrayList<>();
     messageThreads.forEach(thread -> messageThreadsNames.add(thread.getName()));
     Collections.sort(messageThreadsNames);
@@ -103,7 +89,8 @@ public class ChatsPanel extends JPanel {
 
   private void setActive(Long messageThreadId) {
     Optional<MessageThread> nowActive = localStorage.getMessageThreadById(messageThreadId);
-    nowActive.ifPresent(thread -> messageThreadObservers.forEach(observer -> observer.threadSwitched(thread.getMessageThreadId())));
+    nowActive.ifPresent(thread -> messageThreadObservers
+        .forEach(observer -> observer.threadSwitched(thread.getMessageThreadId())));
   }
 
   public String getSelected() {
