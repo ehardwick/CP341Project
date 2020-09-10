@@ -14,8 +14,8 @@ public class ServerStub {
 
   // Server has all the message threads and all the users
   private Map<Long, MessageThread> messageThreads;
-  private Map<Long, User> users;
-  private Map<Long, List<MessageThread>> userMessageThreads;
+  private Map<String, User> users;
+  private Map<String, List<MessageThread>> userMessageThreads;
 
   public ServerStub() {
     // initialize the maps
@@ -28,19 +28,17 @@ public class ServerStub {
     contacts.put("Bob", 2l);
     // initialize some users for testing
     User alice = new User.Builder()
-        .withUserId(1)
         .withUsername("Alice")
         .withContacts(contacts)
         .build();
     
     User bob = new User.Builder()
-        .withUserId(2)
         .withUsername("Bob")
         .withContacts(contacts)
         .build();
     
-    users.put(alice.getUserId(), alice);
-    users.put(bob.getUserId(), bob);
+    users.put(alice.getUsername(), alice);
+    users.put(bob.getUsername(), bob);
     
     // initialize some message threads for testing
     List<User> owners = new ArrayList<>();
@@ -64,7 +62,7 @@ public class ServerStub {
 
     Message secondMessage = new Message.Builder()
         .withSender(bob)
-        .withTextBody("bob's text body 1")
+        .withTextBody("bob's text body 2")
         .withTimeSent(new Date())
         .build();
 
@@ -95,7 +93,7 @@ public class ServerStub {
 
     Message secondMessageTwo = new Message.Builder()
         .withSender(bob)
-        .withTextBody("2nd thread bob's text body 1")
+        .withTextBody("2nd thread bob's text body 2")
         .withTimeSent(new Date())
         .build();
 
@@ -114,12 +112,12 @@ public class ServerStub {
     
     // initialize userToMessageThreads with testing data
     messageThreads.forEach((k,v) -> v.getOwners().forEach(o -> {
-      if(userMessageThreads.containsKey(o.getUserId())) {
-        userMessageThreads.get(o.getUserId()).add(v);
+      if(userMessageThreads.containsKey(o.getUsername())) {
+        userMessageThreads.get(o.getUsername()).add(v);
       } else {
         List<MessageThread> threads = new ArrayList<>();
         threads.add(v);
-        userMessageThreads.put(o.getUserId(),threads);
+        userMessageThreads.put(o.getUsername(),threads);
       }
     }));
   }
@@ -131,20 +129,20 @@ public class ServerStub {
     return messageThreads;
   }
   
-  public Map<Long, User> getUsers(){
+  public Map<String, User> getUsers(){
     return users;
   }
  
   public Optional<List<MessageThread>> getMessageThreadsByUser(User user) {
-    if(userMessageThreads.containsKey(user.getUserId())) {
-      return Optional.of(userMessageThreads.get(user.getUserId()));
+    if(userMessageThreads.containsKey(user.getUsername())) {
+      return Optional.of(userMessageThreads.get(user.getUsername()));
     }
     return Optional.empty();
   }
   
-  public Optional<List<MessageThread>> getMessageThreadsByUser(Long userId) {
-    if(userMessageThreads.containsKey(userId)) {
-      return Optional.of(userMessageThreads.get(userId));
+  public Optional<List<MessageThread>> getMessageThreadsByUser(String username) {
+    if(userMessageThreads.containsKey(username)) {
+      return Optional.of(userMessageThreads.get(username));
     }
     return Optional.empty();
   }
@@ -156,15 +154,15 @@ public class ServerStub {
     return Optional.empty();
   }
   
-  public Optional<User> getUserById(Long userId){
-    if(users.containsKey(userId)) {
-      return Optional.of(users.get(userId));
+  public Optional<User> getUserByUsername(String username){
+    if(users.containsKey(username)) {
+      return Optional.of(users.get(username));
     }
     return Optional.empty();
   }
   
-  public Optional<Map<Long, String>> getMessageThreadNamesForUser(Long userId){
-    Optional<List<MessageThread>> threadsForUser = getMessageThreadsByUser(userId);
+  public Optional<Map<Long, String>> getMessageThreadNamesForUser(String username){
+    Optional<List<MessageThread>> threadsForUser = getMessageThreadsByUser(username);
     Map<Long, String> messageThreadNames = new HashMap<>();
     if(threadsForUser.isPresent()) {
       threadsForUser.get().forEach(thread -> messageThreadNames.put(thread.getMessageThreadId(), thread.getName()));

@@ -12,8 +12,8 @@ import util.User;
 public class LocalStorage implements MessageObserver, MessageThreadObserver {
   // Locally cached versions of info stored by server
   private Map<Long, MessageThread> messageThreads;
-  private Map<Long, User> users;
-  private Map<Long, List<MessageThread>> userMessageThreads;
+  private Map<String, User> users;
+  private Map<String, List<MessageThread>> userMessageThreads;
 
   
   // Information only stored locally
@@ -26,9 +26,8 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   public static class Builder {
     // Locally cached versions of info stored by server
     private Map<Long, MessageThread> messageThreads;
-    private Map<Long, User> users;
-    private Map<Long, String> messageNames;
-    private Map<Long, List<MessageThread>> userMessageThreads;
+    private Map<String, User> users;
+    private Map<String, List<MessageThread>> userMessageThreads;
     
     // Information only stored locally
     private User clientUser;
@@ -41,17 +40,12 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
       return this;
     }
     
-    public Builder withUsers(Map<Long, User> users) {
+    public Builder withUsers(Map<String, User> users) {
       this.users = users;
       return this;
     }
     
-    public Builder withMessageNames(Map<Long, String> messageNames) {
-      this.messageNames = messageNames;
-      return this;
-    }
-    
-    public Builder withUserMessageThreads(Map<Long, List<MessageThread>> userMessageThreads) {
+    public Builder withUserMessageThreads(Map<String, List<MessageThread>> userMessageThreads) {
       this.userMessageThreads = userMessageThreads;
       return this;
     }
@@ -119,13 +113,13 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
     return messageThreads;
   }
   
-  public Map<Long, User> getUsers(){
+  public Map<String, User> getUsers(){
     return users;
   }
  
   public Optional<List<MessageThread>> getMessageThreadsByUser(User user) {
-    if(userMessageThreads.containsKey(user.getUserId())) {
-      return Optional.of(userMessageThreads.get(user.getUserId()));
+    if(userMessageThreads.containsKey(user.getUsername())) {
+      return Optional.of(userMessageThreads.get(user.getUsername()));
     }
     return Optional.empty();
   }
@@ -137,9 +131,9 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
     return Optional.empty();
   }
   
-  public Optional<User> getUserById(Long userId){
-    if(users.containsKey(userId)) {
-      return Optional.of(users.get(userId));
+  public Optional<User> getUserbyUsername(String userName){
+    if(users.containsKey(userName)) {
+      return Optional.of(users.get(userName));
     }
     return Optional.empty();
   }

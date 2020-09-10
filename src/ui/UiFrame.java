@@ -26,32 +26,46 @@ public class UiFrame extends JFrame {
   ChatsPanel chatsPanel;
   ChatTitlePanel chatTitlePanel;
   UserInfoPanel userInfoPanel;
+  LoginPanel loginPanel;
+  
+  //
+  private ServerStub serverStub;
+  private LocalStorage localStorage;
 
-  public UiFrame(User user) {
-    this.user = user;
+  public UiFrame(ServerStub serverStub) {
+    this.serverStub = serverStub;
     this.grid = new GridBagLayout();
     this.gbc = new GridBagConstraints();
+    
     setLayout(grid);
     setTitle("Messaging Client UI Test");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    ServerStub fakeServer = new ServerStub();
+   
     
-    Map<Long, String> messageNames = fakeServer.getMessageThreadNamesForUser(user.getUserId()).get();
+    setupLoginPanels();
+    displayLoginPanels();
+  }
+  
+  public void setUser(User user) {
+    this.user = user;
     Map<Long, MessageThread> messageThreads = new HashMap<>();
-    fakeServer.getMessageThreadsByUser(user.getUserId()).get().forEach(thread -> messageThreads.put(thread.getMessageThreadId(), thread));
-    LocalStorage localStorage = new LocalStorage.Builder()
+    serverStub.getMessageThreadsByUser(user.getUsername()).get().forEach(thread -> messageThreads.put(thread.getMessageThreadId(), thread));
+    this.localStorage = new LocalStorage.Builder()
         .withUser(user)
-        .withServerStub(fakeServer)
-        .withMessageNames(messageNames)
+        .withServerStub(serverStub)
         .withMessageThreads(messageThreads)
-        .withUsers(fakeServer.getUsers())
+        .withUsers(serverStub.getUsers())
         .build();
-        
+    
+    setupChatPanels();
+    displayChatPanels();
+  }
+  
+  private void setupChatPanels() {
     this.sentMessagesPanel = new SentMessagesPanel(localStorage);
     this.inputPanel = new InputPanel(user);
     this.chatsPanel = new ChatsPanel(localStorage);
-    chatsPanel.setMessageThreads(fakeServer.getMessageThreadsByUser(user).get());
+    chatsPanel.setMessageThreads(serverStub.getMessageThreadsByUser(user).get());
     this.chatTitlePanel = new ChatTitlePanel(localStorage);
     this.userInfoPanel = new UserInfoPanel(localStorage);
 
@@ -76,8 +90,9 @@ public class UiFrame extends JFrame {
     validate();
     repaint();
   }
-
-  public void addPanels(Container pane) {
+        
+  private void displayChatPanels() {
+    remove(loginPanel);
     gbc.fill = GridBagConstraints.VERTICAL;
     gbc.gridx = 0;
     gbc.gridy = 0;
@@ -129,9 +144,36 @@ public class UiFrame extends JFrame {
     invalidate();
     validate();
     repaint();
-    
   }
-
+  
+  private void setupLoginPanels() {
+    this.loginPanel = new LoginPanel(this, serverStub);
+    
+    pack();
+    setVisible(true);
+    
+    invalidate();
+    validate();
+    repaint();
+  }
+  
+  private void displayLoginPanels() {
+    gbc.fill = GridBagConstraints.BOTH;
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    gbc.gridwidth = 1;
+    gbc.gridheight = 1;
+    gbc.weightx = 0.0;
+    gbc.weighty = 0.0;
+    this.add(loginPanel, gbc);
+    pack();
+    setVisible(true);
+    
+    invalidate();
+    validate();
+    repaint();
+  }
+  
   public void setMessageThreads(List<MessageThread> messageThreads) {
     chatsPanel.setMessageThreads(messageThreads);
   }

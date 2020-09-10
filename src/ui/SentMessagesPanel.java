@@ -44,7 +44,7 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
     switchedToThread.ifPresent(thread -> {
       this.tableModel.setRowCount(0);
       thread.getMessages().forEach(message -> {
-        if (user.getUserId() == message.getSender().getUserId()) {
+        if (user.getUsername() == message.getSender().getUsername()) {
           addFromMessage(message.getTextBody() + " (" + message.getStatus() + ")");
         } else {
           addToMessage(message.getTextBody() + " (" + message.getStatus() + ")");
@@ -57,7 +57,7 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
   @Override
   public void sendNewMessage(Message newMessage) {
     String formattedMessage = newMessage.getTextBody() + " (" + newMessage.getStatus() + ")";
-    if (user.getUserId() == newMessage.getSender().getUserId()) {
+    if (user.getUsername() == newMessage.getSender().getUsername()) {
       addFromMessage(formattedMessage);
     } else {
       addToMessage(formattedMessage);

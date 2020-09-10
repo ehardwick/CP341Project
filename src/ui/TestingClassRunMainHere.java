@@ -19,20 +19,9 @@ public class TestingClassRunMainHere {
   }
 
   public void trueMain() {
-    Map<String, Long> contacts = new HashMap<>();
-    contacts.put("Alice", 1l);
-    contacts.put("Bob", 2l);
     
-    User bob = new User.Builder()
-        .withUserId(2)
-        .withUsername("Bob")
-        .withContacts(contacts)
-        .build();
-    
-    uiTest = new UiFrame(bob);
-    
-    uiTest.addPanels(uiTest.getContentPane());
-    
+    uiTest = new UiFrame(new ServerStub());
+        
     uiTest.invalidate();
     uiTest.validate();
     uiTest.repaint();

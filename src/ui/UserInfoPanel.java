@@ -13,7 +13,7 @@ public class UserInfoPanel extends JPanel implements MessageThreadObserver {
   public UserInfoPanel(LocalStorage localStorage) {
     this.localStorage = localStorage;
     JTextArea textArea = new JTextArea("Username: " + localStorage.getClientUser().getUsername()
-        + "\nUserId: " + localStorage.getClientUser().getUserId());
+        + "\nUserId: DNE");
     textArea.setOpaque(false);
     textArea.setEditable(false);
     textArea.setFocusable(false);
