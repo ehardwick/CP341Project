@@ -39,7 +39,7 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
 
   @Override
   public void threadSwitched(long messageThreadId) {
-    Optional<MessageThread> switchedToThread = localStorage.getMessageThreadById(messageThreadId);
+    Optional<MessageThread> switchedToThread = localStorage.getMessageThread(messageThreadId);
     
     switchedToThread.ifPresent(thread -> {
       this.tableModel.setRowCount(0);

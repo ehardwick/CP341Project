@@ -1,27 +1,44 @@
 package ui;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import client.Client;
 import util.Message;
+import util.MessageProposal;
+import util.Request;
 import util.MessageThread;
+import util.MessageThreadList;
+import util.MessageThreadProposal;
 import util.User;
+import util.Request.MessageType;
+import util.Response;
 
 public class LocalStorage implements MessageObserver, MessageThreadObserver {
+  // Headers (aka the number of things server has to support)
+  private static final String GET_MESSAGE_THREAD = "getMessageThread";
+  private static final String GET_MESSAGE_THREADS_BY_USER = "getMessageThreadsByUser";
+  private static final String GET_USER = "getUser";
+  private static final String CREATE_NEW_MESSAGE_THREAD = "createNewMessageThread";
+  private static final String SEND_NEW_MESSAGE = "sendNewMessage";
+
   // Locally cached versions of info stored by server
   private Map<Long, MessageThread> messageThreads;
   private Map<String, User> users;
   private Map<String, List<MessageThread>> userMessageThreads;
 
-
   // Information only stored locally
   private User clientUser;
   private long selectedThreadId;
+  private long requestId = 0;
 
-  private ServerStub serverStub;
   private Client client;
+  private Gson gson;
 
   public static class Builder {
     // Locally cached versions of info stored by server
@@ -32,8 +49,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
     // Information only stored locally
     private User clientUser;
     private long selectedThreadId;
-
-    private ServerStub serverStub;
 
     public Builder withMessageThreads(Map<Long, MessageThread> messageThreads) {
       this.messageThreads = messageThreads;
@@ -60,11 +75,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
       return this;
     }
 
-    public Builder withServerStub(ServerStub serverStub) {
-      this.serverStub = serverStub;
-      return this;
-    }
-
     public LocalStorage build() {
       LocalStorage localStorage = new LocalStorage();
       localStorage.messageThreads = this.messageThreads;
@@ -72,7 +82,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
       localStorage.userMessageThreads = this.userMessageThreads;
       localStorage.clientUser = this.clientUser;
       localStorage.selectedThreadId = this.selectedThreadId;
-      localStorage.serverStub = this.serverStub;
 
       return localStorage;
     }
@@ -81,34 +90,11 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   public LocalStorage() {
     this.client = new Client();
     client.start();
+
+    GsonBuilder builder = new GsonBuilder();
+    builder.setPrettyPrinting();
+    this.gson = builder.create();
   }
-
-  /*
-   * METHODS TO REFRESH INFO FROM SERVER
-   */
-
-  public void refreshAllUsers() {
-    users = serverStub.getUsers();
-  }
-
-  public void refreshAllMessageThreads() {
-    messageThreads = serverStub.getMessageThreads();
-  }
-
-  public void refreshMessageThread(MessageThread thread) {
-    Optional<MessageThread> serverCopy =
-        serverStub.getMessageThreadById(thread.getMessageThreadId());
-    serverCopy.ifPresent(copy -> messageThreads.put(thread.getMessageThreadId(), copy));
-  }
-
-  public void refreshMessageThread(long messageThreadId) {
-    Optional<MessageThread> serverCopy = serverStub.getMessageThreadById(messageThreadId);
-    serverCopy.ifPresent(copy -> messageThreads.put(messageThreadId, copy));
-  }
-
-  /*
-   * GETTERS FOR INFO SHARED WITH SERVER
-   */
 
   public Map<Long, MessageThread> getMessageThreads() {
     return messageThreads;
@@ -118,42 +104,124 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
     return users;
   }
 
-  public Optional<List<MessageThread>> getMessageThreadsByUser(User user) {
-    if (userMessageThreads.containsKey(user.getUsername())) {
-      return Optional.of(userMessageThreads.get(user.getUsername()));
-    }
-    return Optional.empty();
-  }
+  /*
+   * GET MESSAGE THREAD
+   */
 
-  public Optional<MessageThread> getMessageThreadById(Long messageThreadId) {
+  public Optional<MessageThread> getMessageThread(long messageThreadId) {
     if (messageThreads.containsKey(messageThreadId)) {
       return Optional.of(messageThreads.get(messageThreadId));
     }
     return Optional.empty();
   }
 
-  public Optional<User> getUserbyUsername(String userName) {
+  public Optional<MessageThread> getServerMessageThread(MessageThread thread) {
+    Request getMessageThreadMessage = new Request.Builder().withMessageType(MessageType.GET)
+        .withHeader(GET_MESSAGE_THREAD).withId(getNextRequestId()).withJsonBody(gson.toJson(thread))
+        .withTime(new Date()).build();
+
+    Optional<Response> response = client.newRequest(getMessageThreadMessage);
+
+    if (response.isPresent()) {
+      try {
+        return Optional.of(gson.fromJson(response.get().getJsonBody(), MessageThread.class));
+      } catch (JsonSyntaxException e) {
+        return Optional.empty();
+      }
+    }
+    return Optional.empty();
+  }
+
+  public Optional<MessageThread> getMessageThread(MessageThread thread) {
+    return getMessageThread(thread.getMessageThreadId());
+  }
+
+  public Optional<MessageThread> getServerMessageThread(long messageThreadId) {
+    MessageThread toGet = new MessageThread.Builder().withMessageThreadId(messageThreadId).build();
+    return getServerMessageThread(toGet);
+  }
+
+  /*
+   * GET MESSAGE THREADS BY USER
+   */
+
+  public Optional<List<MessageThread>> getMessageThreadsByUser(User user) {
+    return getMessageThreadsByUser(user.getUsername());
+  }
+
+  public Optional<List<MessageThread>> getServerMessageThreadsByUser(User user) {
+    Request getMessageThreadsRequest = new Request.Builder().withMessageType(MessageType.GET)
+        .withHeader(GET_MESSAGE_THREADS_BY_USER).withId(getNextRequestId())
+        .withJsonBody(gson.toJson(user, User.class)).withTime(new Date()).build();
+
+    Optional<Response> response = client.newRequest(getMessageThreadsRequest);
+
+    if (response.isPresent()) {
+      try {
+        System.out.println("got these threads: ");
+        gson.fromJson(response.get().getJsonBody(), MessageThreadList.class).getMessageThreads()
+            .forEach(thread -> System.out.println(thread.getName()));
+        return Optional.of(gson.fromJson(response.get().getJsonBody(), MessageThreadList.class)
+            .getMessageThreads());
+      } catch (JsonSyntaxException e) {
+        return Optional.empty();
+      }
+    }
+    return Optional.empty();
+  }
+
+  public Optional<List<MessageThread>> getMessageThreadsByUser(String username) {
+    if (userMessageThreads.containsKey(username)) {
+      return Optional.of(userMessageThreads.get(username));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<List<MessageThread>> getServerMessageThreadsByUser(String username) {
+    User user = new User.Builder().withUsername(username).build();
+    return getServerMessageThreadsByUser(user);
+  }
+
+  /*
+   * GET USER
+   */
+
+  public Optional<User> getUser(String userName) {
     if (users.containsKey(userName)) {
       return Optional.of(users.get(userName));
     }
     return Optional.empty();
   }
 
-  /*
-   * GETTERS FOR LOCAL ONLY INFO
-   */
-  public User getClientUser() {
-    return clientUser;
+  public Optional<User> getServerUser(String userName) {
+    User user = new User.Builder().withUsername(userName).build();
+    return getServerUser(user);
+  }
+
+  public Optional<User> getUser(User user) {
+    return getUser(user.getUsername());
+  }
+
+  public Optional<User> getServerUser(User user) {
+    Request getUserRequest = new Request.Builder().withMessageType(MessageType.GET)
+        .withHeader(GET_USER).withId(getNextRequestId()).withJsonBody(gson.toJson(user, User.class))
+        .withTime(new Date()).build();
+
+    Optional<Response> response = client.newRequest(getUserRequest);
+
+    if (response.isPresent()) {
+      try {
+        return Optional.of(gson.fromJson(response.get().getJsonBody(), User.class));
+      } catch (JsonSyntaxException e) {
+        return Optional.empty();
+      }
+    }
+    return Optional.empty();
   }
 
   /*
-   * METHODS FOR DIFFERENT ACTIONS
+   * CREATE A NEW MESSAGE THREAD
    */
-
-  @Override
-  public void threadSwitched(long messageThreadId) {
-    selectedThreadId = messageThreadId;
-  }
 
   public Optional<MessageThread> createNewMessageThread(List<String> ownerUsernames, String name) {
     List<User> owners = new ArrayList<>();
@@ -165,9 +233,36 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
       }
     }
     owners.add(clientUser);
-    Optional<MessageThread> newThread = serverStub.createNewMessageThread(owners, name);
-    newThread.ifPresent(thread -> messageThreads.put(thread.getMessageThreadId(), thread));
-    return newThread;
+
+    MessageThreadProposal proposedThread =
+        new MessageThreadProposal.Builder().withName(name).withOwners(owners).build();
+
+    Request createThreadRequest = new Request.Builder().withMessageType(MessageType.GET)
+        .withHeader(CREATE_NEW_MESSAGE_THREAD).withId(getNextRequestId())
+        .withJsonBody(gson.toJson(proposedThread)).withTime(new Date()).build();
+
+    Optional<Response> response = client.newRequest(createThreadRequest);
+
+    if (response.isPresent()) {
+      try {
+        return Optional.of(gson.fromJson(response.get().getJsonBody(), MessageThread.class));
+      } catch (JsonSyntaxException e) {
+        return Optional.empty();
+      }
+    }
+    return Optional.empty();
+  }
+
+  /*
+   * LOCAL ONLY STUFF
+   */
+  public User getClientUser() {
+    return clientUser;
+  }
+
+  @Override
+  public void threadSwitched(long messageThreadId) {
+    selectedThreadId = messageThreadId;
   }
 
   @Override
@@ -177,13 +272,31 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
 
   @Override
   public void sendNewMessage(Message newMessage) {
-    // Send the message to the server to be delivered and added to the server messageThread
-    boolean accepted = client.sendMessage("sending message with text: " + newMessage.getTextBody()
-        + " from " + newMessage.getSender().getUsername() + " to thread " + selectedThreadId
-        + " with name " + messageThreads.get(selectedThreadId).getName());
-    // if accepted add the new message to the locally stored messageThread
-    if (accepted) {
+    MessageProposal messageProposal = new MessageProposal.Builder()
+        .withMessageThreadId(selectedThreadId).withSender(newMessage.getSender())
+        .withTextBody(newMessage.getTextBody()).withTimeSent(newMessage.getTimeSent()).build();
+
+    Request sendMessageRequest = new Request.Builder().withMessageType(MessageType.POST)
+        .withHeader(SEND_NEW_MESSAGE).withId(getNextRequestId())
+        .withJsonBody(gson.toJson(messageProposal)).withTime(new Date()).build();
+
+    Optional<Response> response = client.newRequest(sendMessageRequest);
+
+    if (response.isPresent() && response.get().getSuccess()) {
       messageThreads.get(selectedThreadId).addMessage(newMessage);
     }
+  }
+
+  private long getNextRequestId() {
+    requestId++;
+    return requestId;
+  }
+
+  public void setMessageThreads(Map<Long, MessageThread> messageThreads) {
+    this.messageThreads = messageThreads;
+  }
+  
+  public void setUsers(Map<String, User> users) {
+    this.users = users;
   }
 }

@@ -88,7 +88,7 @@ public class ChatsPanel extends JPanel {
   }
 
   private void setActive(Long messageThreadId) {
-    Optional<MessageThread> nowActive = localStorage.getMessageThreadById(messageThreadId);
+    Optional<MessageThread> nowActive = localStorage.getMessageThread(messageThreadId);
     nowActive.ifPresent(thread -> messageThreadObservers
         .forEach(observer -> observer.threadSwitched(thread.getMessageThreadId())));
   }

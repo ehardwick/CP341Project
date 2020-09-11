@@ -20,7 +20,7 @@ public class LoginPanel extends JPanel {
   private final static String DEFAULT_TEXT = "Username";
   private final static int NUM_COLUMNS = 25;
 
-  public LoginPanel(UiFrame uiFrame, ServerStub serverStub) {
+  public LoginPanel(UiFrame uiFrame, LocalStorage localStorage) {
     BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
     setLayout(boxLayout);
 
@@ -36,7 +36,7 @@ public class LoginPanel extends JPanel {
     JButton logIn = new JButton("Log in");
     logIn.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        Optional<User> user = serverStub.getUserByUsername(textField.getText());
+        Optional<User> user = localStorage.getServerUser(textField.getText());
         user.ifPresent(v -> uiFrame.setUser(v));
       }
     });

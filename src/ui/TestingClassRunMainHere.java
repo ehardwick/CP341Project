@@ -20,7 +20,7 @@ public class TestingClassRunMainHere {
 
   public void trueMain() {
     
-    uiTest = new UiFrame(new ServerStub());
+    uiTest = new UiFrame();
         
     uiTest.invalidate();
     uiTest.validate();

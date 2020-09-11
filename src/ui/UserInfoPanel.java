@@ -29,7 +29,7 @@ public class UserInfoPanel extends JPanel implements MessageThreadObserver {
 
   @Override
   public void threadSwitched(long messageThreadId) {
-    Optional<MessageThread> switchedToThread = localStorage.getMessageThreadById(messageThreadId);
+    Optional<MessageThread> switchedToThread = localStorage.getMessageThread(messageThreadId);
     switchedToThread.ifPresent(thread -> textArea.setText(thread.getName()));
   }
 }

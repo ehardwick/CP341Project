@@ -5,6 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import util.Request;
+import util.Response;
 
 public class Client {
 
@@ -12,6 +19,19 @@ public class Client {
 
   private PrintWriter out;
   private BufferedReader serverIn;
+
+  private Map<Long, Thread> threadRequests;
+  private Map<Long, Response> threadResponses;
+  
+  private Gson gson;
+
+  public Client() {
+    threadRequests = new HashMap<>();
+    threadResponses = new HashMap<>();
+    GsonBuilder builder = new GsonBuilder();
+    builder.setPrettyPrinting();
+    this.gson = builder.create();
+  }
 
   public void start() {
     Socket client;
@@ -31,6 +51,13 @@ public class Client {
       while (true) {
         try {
           String message = serverIn.readLine();
+          while (serverIn.ready()) {
+            message = message + serverIn.readLine();
+          }
+          Response response = gson.fromJson(message, Response.class);
+          threadResponses.put(response.getId(), response);
+          // TODO read message, check which requestId it has, throw it in the soup (aka put the
+          // response Object into the threadResponse map and notify the request thread)
           System.out.println(message);
         } catch (IOException e) {
           throw new RuntimeException("Failed to Read Server Input", e);
@@ -41,17 +68,27 @@ public class Client {
     readMessage.start();
   }
 
-  public static void main(String[] args) {
-    Client chatClient = new Client();
-    chatClient.start();
-  }
-
-  public boolean sendMessage(String input) {
+  public Optional<Response> newRequest(Request request) {
+    Thread requestThread = new Thread(() -> {
+      while(!threadResponses.containsKey(request.getId())) {
+        
+      }
+    });
+    
+    threadRequests.put(request.getId(), requestThread);
+    out.println(gson.toJson(request, Request.class));
+    System.out.println("test");
+    requestThread.run();
+    
+    threadRequests.put(request.getId(), requestThread);
+    
     try {
-      out.println("chat message: " + input);
-      return true;
-    } catch (Exception e) {
-      return false;
+      requestThread.join();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
+    
+    return threadResponses.containsKey(request.getId()) ? Optional.of(threadResponses.get(request.getId())) : Optional.empty();
   }
 }
