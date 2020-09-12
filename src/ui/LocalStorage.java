@@ -273,8 +273,7 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   @Override
   public void sendNewMessage(Message newMessage) {
     MessageProposal messageProposal = new MessageProposal.Builder()
-        .withMessageThreadId(selectedThreadId).withSender(newMessage.getSender())
-        .withTextBody(newMessage.getTextBody()).withTimeSent(newMessage.getTimeSent()).build();
+        .withMessageThreadId(selectedThreadId).withMessage(newMessage).build();
 
     Request sendMessageRequest = new Request.Builder().withMessageType(MessageType.POST)
         .withHeader(SEND_NEW_MESSAGE).withId(getNextRequestId())

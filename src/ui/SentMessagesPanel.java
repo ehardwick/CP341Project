@@ -1,13 +1,16 @@
 package ui;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import util.Message;
 import util.MessageThread;
+import util.Request;
+import util.Response;
 import util.User;
 
 @SuppressWarnings("serial")
@@ -17,6 +20,7 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
   private JTable table;
   private User user;
   private LocalStorage localStorage;
+  private Timer timer = new Timer();
 
   public SentMessagesPanel(LocalStorage localStorage) {
     this.tableModel = new DefaultTableModel(new Object[] {"", ""}, 1);
@@ -37,21 +41,35 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
     tableModel.addRow(new Object[] {message, ""});
   }
 
+  private class RefreshTask extends TimerTask {
+    private long messageThreadId;
+
+    public RefreshTask(long messageThreadId) {
+      this.messageThreadId = messageThreadId;
+    }
+
+    public void run() {
+      Optional<MessageThread> switchedToThread = localStorage.getServerMessageThread(messageThreadId);
+
+      switchedToThread.ifPresent(thread -> {
+        tableModel.setRowCount(0);
+        thread.getMessages().forEach(message -> {
+          if (user.getUsername().equals(message.getSender().getUsername())) {
+            addFromMessage(message.getTextBody() + " (" + message.getStatus() + ")");
+          } else {
+            addToMessage(message.getTextBody() + " (" + message.getStatus() + ")");
+          }
+        });
+        table.changeSelection(table.getRowCount() - 1, 0, false, false);
+      });
+    }
+  }
+
   @Override
   public void threadSwitched(long messageThreadId) {
-    Optional<MessageThread> switchedToThread = localStorage.getMessageThread(messageThreadId);
-    
-    switchedToThread.ifPresent(thread -> {
-      this.tableModel.setRowCount(0);
-      thread.getMessages().forEach(message -> {
-        if (user.getUsername() == message.getSender().getUsername()) {
-          addFromMessage(message.getTextBody() + " (" + message.getStatus() + ")");
-        } else {
-          addToMessage(message.getTextBody() + " (" + message.getStatus() + ")");
-        }
-      });
-      table.changeSelection(table.getRowCount() - 1, 0, false, false);
-    });
+    this.timer.cancel();
+    this.timer = new Timer();
+    this.timer.schedule(new RefreshTask(messageThreadId), 0, 1000);
   }
 
   @Override

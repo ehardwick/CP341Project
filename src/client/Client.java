@@ -6,12 +6,18 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import util.Message;
+import util.MessageProposal;
+import util.MessageThread;
+import util.MessageThreadList;
 import util.Request;
 import util.Response;
+import util.User;
 
 public class Client {
 

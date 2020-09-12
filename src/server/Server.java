@@ -6,12 +6,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -175,9 +172,7 @@ public class Server {
             MessageProposal messageProposal =
                 gson.fromJson(request.getJsonBody(), MessageProposal.class);
 
-            Message message = new Message.Builder().withSender(messageProposal.getSender())
-                .withTextBody(messageProposal.getTextBody())
-                .withTimeSent(messageProposal.getTimeSent()).build();
+            Message message = messageProposal.getMessage();
 
             messageThreads.get(messageProposal.getMessageThreadId()).addMessage(message);
             System.out.println("added message " + message.getTextBody() + " to message trhead " + messageThreads.get(messageProposal.getMessageThreadId()).getName());
