@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -154,10 +155,17 @@ public class Server {
         case GET_USER:
           try {
             User user = gson.fromJson(request.getJsonBody(), User.class);
-            if (users.containsKey(user.getUsername())) {
-              jsonBody = gson.toJson(users.get(user.getUsername()));
+            if (this.users.containsKey(user.getUsername())) {
+              jsonBody = gson.toJson(this.users.get(user.getUsername()));
               success = true;
-              System.out.println("successfully did GET_USER case");
+              System.out.println("successfully did GET_USER case, grabbing existing user");
+            }
+            else {
+            	this.users.put(user.getUsername(), user);
+            	this.userMessageThreads.put(user.getUsername(), new ArrayList<MessageThread>());
+            	jsonBody = gson.toJson(this.users.get(user.getUsername()));
+                success = true;
+                System.out.println("successfully did GET_USER case, created new user");
             }
           } catch (Exception e) {
             System.out.println("Getting user broke");
