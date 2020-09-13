@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import util.Message;
 import util.MessageProposal;
 import util.MessageThread;
 import util.MessageThreadList;
+import util.MessageThreadProposal;
 import util.Request;
 import util.Response;
 import util.User;
@@ -84,6 +86,16 @@ public class Server {
 //      users = logReader.getUsers();
 //      userMessageThreads = logReader.getUserMessageThreads();
     }
+    
+    /* 
+     * returns the next available message thread ID
+     * TODO: handle race condition!!!
+     */
+    private Long nextMessageThreadId() {
+    	List<Long> keyList = new ArrayList<Long>(this.messageThreads.keySet());
+    	Collections.reverse(keyList);
+    	return (keyList.get(0) + 1);
+    }
 
     public void run() {
       try {
@@ -138,6 +150,7 @@ public class Server {
             System.out.println("Getting a message thread broke :((( this is so sad");
           }
           break;
+          
         case GET_MESSAGE_THREADS_BY_USER:
           try {
             User user = gson.fromJson(request.getJsonBody(), User.class);
@@ -152,6 +165,7 @@ public class Server {
             System.out.println("Getting a message threads by user broke");
           }
           break;
+          
         case GET_USER:
           try {
             User user = gson.fromJson(request.getJsonBody(), User.class);
@@ -171,9 +185,38 @@ public class Server {
             System.out.println("Getting user broke");
           }
           break;
+          
         case CREATE_NEW_MESSAGE_THREAD:
-          System.out.println("here2");
+          //System.out.println("here2");
+        	try {
+        		MessageThreadProposal mtProposal = 
+        			gson.fromJson(request.getJsonBody(), MessageThreadProposal.class);
+        		MessageThread mThread = new MessageThread.Builder()
+    				.withOwners(mtProposal.getOwners())
+    				.withName(mtProposal.getName())
+    				.withMessageThreadId(this.nextMessageThreadId())
+    				.build();
+        		// add new thread to messageThreads
+        		this.messageThreads.put(this.nextMessageThreadId(), mThread);
+        		// add new thread to each owner's list of messageThreads (or make new list and add it)
+        		for (User owner : mtProposal.getOwners()) {
+        			List<MessageThread> currList = this.userMessageThreads.get(owner.getUsername());
+        			if (currList == null) {
+        				currList = new ArrayList<MessageThread>();
+        				currList.add(mThread);	
+        			}
+        			else {
+        				currList.add(mThread);
+        			}
+        			this.userMessageThreads.put(owner.getUsername(), currList);
+        		}
+        		jsonBody = gson.toJson(mThread);
+                success = true;
+        	} catch (Exception e) {
+        		System.out.println("poop");
+        	}
           break;
+          
         case SEND_NEW_MESSAGE:
           System.out.println("here2");
           try {
