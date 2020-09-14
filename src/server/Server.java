@@ -35,7 +35,7 @@ public class Server {
   private Map<String, List<MessageThread>> userMessageThreads;
 
   private static Set<PrintWriter> writers = new HashSet<>();
-  private int portNumber = 8888;
+  private int portNumber;
 
   public Server(int portNumber) {
     this.portNumber = portNumber;

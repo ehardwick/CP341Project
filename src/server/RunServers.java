@@ -5,14 +5,32 @@ import java.util.List;
 
 public class RunServers {
 
-  private final static int[] PORT_NUMBERS = {8888, 8000};
+  private final static int[] PORT_NUMBERS = {8880, 8000};
 
   public static void main(String[] args) {
-    List<Server> servers = new ArrayList<>();
-    for(int portNumber : PORT_NUMBERS) {
-      servers.add(new Server(portNumber));
+    List<Thread> serverThreads = new ArrayList<>();
+    for (int portNumber : PORT_NUMBERS) {
+      serverThreads.add(new ServerThread(portNumber));
     }
-    servers.forEach(server -> server.start());
+    serverThreads.forEach(serverThread -> serverThread.start());
+//    serverThreads.get(0).stop();
   }
+  
+//  private class KillThread extends TimerTask{
+//    
+//  }
 
+  private static class ServerThread extends Thread {
+    private int portNumber;
+
+    public ServerThread(int portNumber) {
+      this.portNumber = portNumber;
+    }
+
+    public void run() {
+      Server server = new Server(portNumber);
+      server.start();
+    }
+
+  }
 }

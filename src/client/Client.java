@@ -43,12 +43,19 @@ public class Client {
   }
 
   public void start() {
-    Socket client;
-    try {
-      client = new Socket("127.0.0.1", portNumbers[PORT]);
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Failed to create new Socket on Port %s", PORT), e);
+    Socket client = null;
+    for (int port : portNumbers) {
+      try {
+        client = new Socket("127.0.0.1", port);
+        break;
+      } catch (Exception e) {
+        System.out.println("failed to connect to port " + port);
+      }
     }
+    if (client == null) {
+      throw new RuntimeException("Was never able to find a port to connect to");
+    }
+
     try {
       out = new PrintWriter(client.getOutputStream(), true);
       serverIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -83,7 +90,6 @@ public class Client {
     out.println(gson.toJson(request, Request.class));
     while (!threadResponses.containsKey(request.getId())) {
       if (System.currentTimeMillis() - startTime > 5000) {
-        PORT++;
         start();
         newRequest(request);
       }
