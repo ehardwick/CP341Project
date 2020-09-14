@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,14 +22,16 @@ import util.User;
 
 public class Client {
 
-  static final int PORT = 8888;
+  private int PORT = 0;
+
+  private int[] portNumbers = {8888, 8000};
 
   private PrintWriter out;
   private BufferedReader serverIn;
 
   private Map<Long, Thread> threadRequests;
   private Map<Long, Response> threadResponses;
-  
+
   private Gson gson;
 
   public Client() {
@@ -42,7 +45,7 @@ public class Client {
   public void start() {
     Socket client;
     try {
-      client = new Socket("127.0.0.1", PORT);
+      client = new Socket("127.0.0.1", portNumbers[PORT]);
     } catch (IOException e) {
       throw new RuntimeException(String.format("Failed to create new Socket on Port %s", PORT), e);
     }
@@ -75,26 +78,19 @@ public class Client {
   }
 
   public Optional<Response> newRequest(Request request) {
-    Thread requestThread = new Thread(() -> {
-      while(!threadResponses.containsKey(request.getId())) {
-        
-      }
-    });
-    
-    threadRequests.put(request.getId(), requestThread);
+    long startTime = System.currentTimeMillis();
+
     out.println(gson.toJson(request, Request.class));
-    System.out.println("test");
-    requestThread.run();
-    
-    threadRequests.put(request.getId(), requestThread);
-    
-    try {
-      requestThread.join();
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    while (!threadResponses.containsKey(request.getId())) {
+      if (System.currentTimeMillis() - startTime > 5000) {
+        PORT++;
+        start();
+        newRequest(request);
+      }
     }
-    
-    return threadResponses.containsKey(request.getId()) ? Optional.of(threadResponses.get(request.getId())) : Optional.empty();
+
+    return threadResponses.containsKey(request.getId())
+        ? Optional.of(threadResponses.get(request.getId()))
+        : Optional.empty();
   }
 }

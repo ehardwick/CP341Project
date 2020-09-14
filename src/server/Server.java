@@ -35,22 +35,21 @@ public class Server {
   private Map<String, List<MessageThread>> userMessageThreads;
 
   private static Set<PrintWriter> writers = new HashSet<>();
-  static final int PORT = 8888;
+  private int portNumber = 8888;
 
-  public static void main(String[] args) {
-    Server server = new Server();
-    server.trueMain();
+  public Server(int portNumber) {
+    this.portNumber = portNumber;
   }
   
-  public void trueMain() {
+  public void start() {
     LogReader logReader = new LogReader();
     messageThreads = logReader.getMessageThreads();
     users = logReader.getUsers();
     userMessageThreads = logReader.getUserMessageThreads();
-    System.out.println(String.format("Server is online, listeningsss on port %s", PORT));
+    System.out.println(String.format("Server is online, listening on port %s", portNumber));
     Socket socket;
     try {
-      ServerSocket serverSocket = new ServerSocket(PORT);
+      ServerSocket serverSocket = new ServerSocket(portNumber);
       while (true) {
         socket = serverSocket.accept();
         new ClientThread(socket, messageThreads, users, userMessageThreads).start();
