@@ -1,36 +1,40 @@
 package server;
 
+import com.google.gson.Gson;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import util.Message;
 import util.MessageThread;
+import util.MessageThreadsLog;
 import util.User;
+import util.UserLog;
+import util.UserMessageThreadsLog;
+import util.Logger;
 
-/**
- * This class fills in for not being able to read text to make the logs yet
- *
- */
 public class LogReader {
-  private Map<Long, MessageThread> messageThreads;
-  private Map<String, User> users;
-  private Map<String, List<MessageThread>> userMessageThreads;
+  private UserLog userLog;
+  private MessageThreadsLog messageThreadsLog;
+  private UserMessageThreadsLog userMessageThreadsLog;
+  private Logger logger = new Logger();
+  private Gson gson = new Gson();
 
   public LogReader() {
-    messageThreads = new HashMap<>();
-    users = new HashMap<>();
-    userMessageThreads = new HashMap<>();
+    userLog = new UserLog();
+    messageThreadsLog = new MessageThreadsLog();
+    userMessageThreadsLog = new UserMessageThreadsLog();
 
     // initialize some users for testing
     User alice = new User.Builder().withUsername("Alice").build();
-
     User bob = new User.Builder().withUsername("Bob").build();
+    
+    userLog.putIfAbsent(alice.getUsername(), alice);    
+    userLog.putIfAbsent(bob.getUsername(), bob);
 
-    users.put(alice.getUsername(), alice);
-    users.put(bob.getUsername(), bob);
-
+    saveUsers(userLog);
+    
     // initialize some message threads for testing
     List<User> owners = new ArrayList<>();
     owners.add(alice);
@@ -72,30 +76,62 @@ public class LogReader {
 
     threadTwo.addMessage(thirdMessageTwo);
 
-    messageThreads.put(threadOne.getMessageThreadId(), threadOne);
-    messageThreads.put(threadTwo.getMessageThreadId(), threadTwo);
+    messageThreadsLog.putIfAbsent(threadOne.getMessageThreadId(), threadOne);
+    messageThreadsLog.putIfAbsent(threadTwo.getMessageThreadId(), threadTwo);
+    
+    saveMessageThreads(messageThreadsLog);
 
     // initialize userToMessageThreads with testing data
-    messageThreads.forEach((k, v) -> v.getOwners().forEach(o -> {
-      if (userMessageThreads.containsKey(o.getUsername())) {
-        userMessageThreads.get(o.getUsername()).add(v);
+    messageThreadsLog.getMap().forEach((k, v) -> v.getOwners().forEach(o -> {
+      if (userMessageThreadsLog.getMap().containsKey(o.getUsername())) {
+    	  userMessageThreadsLog.getMap().get(o.getUsername()).add(v);
       } else {
         List<MessageThread> threads = new ArrayList<>();
         threads.add(v);
-        userMessageThreads.put(o.getUsername(), threads);
+        userMessageThreadsLog.putIfAbsent(o.getUsername(), threads);
       }
     }));
+    
+    saveUserMessageThreads(userMessageThreadsLog);
   }
 
   public Map<Long, MessageThread> getMessageThreads() {
-    return messageThreads;
+	  try {
+		messageThreadsLog = gson.fromJson(new FileReader("MessageThreadsLog.txt"), MessageThreadsLog.class);
+	} catch (Exception e) {
+		throw new RuntimeException("Failed to Get Message Threads", e);
+	}
+	  return messageThreadsLog.getMap();
   }
-
+  
+  public void saveMessageThreads(MessageThreadsLog messageThreadsLog) {
+	  logger.addToLog("MessageThreadsLog.txt", gson.toJson(messageThreadsLog, MessageThreadsLog.class));
+  }
+  
   public Map<String, User> getUsers() {
-    return users;
+	  try {
+		userLog = gson.fromJson(new FileReader("UserLog.txt"), UserLog.class);
+	} catch (Exception e) {
+		throw new RuntimeException("Failed to Get Users", e);
+	}
+	  return userLog.getMap();
+  }
+  
+  
+  public void saveUsers(UserLog userLog) {
+	  logger.addToLog("UserLog.txt", gson.toJson(userLog, UserLog.class));
   }
 
   public Map<String, List<MessageThread>> getUserMessageThreads() {
-    return userMessageThreads;
+	  try {
+		  userMessageThreadsLog = gson.fromJson(new FileReader("UserMessageThreadsLog.txt"), UserMessageThreadsLog.class);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to Get User Message Threads", e);
+		}
+		  return userMessageThreadsLog.getMap();
+  }
+  
+  public void saveUserMessageThreads(UserMessageThreadsLog userMessageThreadsLog) {
+	  logger.addToLog("UserMessageThreadsLog.txt", gson.toJson(userMessageThreadsLog, UserMessageThreadsLog.class));
   }
 }
