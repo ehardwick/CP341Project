@@ -226,8 +226,10 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   public Optional<MessageThread> createNewMessageThread(List<String> ownerUsernames, String name) {
     List<User> owners = new ArrayList<>();
     for (String ownerUsername : ownerUsernames) {
-      if (this.users.containsKey(ownerUsername)) {
-        owners.add(this.users.get(ownerUsername));
+      //System.out.println("VIKTOR: " + users);
+      Optional<User> maybeUser = getServerUser(ownerUsername);
+      if (maybeUser.isPresent()) {
+        owners.add(maybeUser.get());
       } else {
         System.out.println("failed to find user " + ownerUsername);
       }
