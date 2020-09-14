@@ -1,7 +1,10 @@
 package server;
 
 import com.google.gson.Gson;
+
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,13 +15,11 @@ import util.MessageThreadsLog;
 import util.User;
 import util.UserLog;
 import util.UserMessageThreadsLog;
-import util.Logger;
 
 public class LogReader {
   private UserLog userLog;
   private MessageThreadsLog messageThreadsLog;
   private UserMessageThreadsLog userMessageThreadsLog;
-  private Logger logger = new Logger();
   private Gson gson = new Gson();
 
   public LogReader() {
@@ -105,7 +106,14 @@ public class LogReader {
   }
   
   public void saveMessageThreads(MessageThreadsLog messageThreadsLog) {
-	  logger.addToLog("MessageThreadsLog.txt", gson.toJson(messageThreadsLog, MessageThreadsLog.class));
+	  PrintWriter out;
+	try {
+		out = new PrintWriter("MessageThreadsLog.txt");
+	} catch (FileNotFoundException e) {
+		throw new RuntimeException("Failed to Save Users", e);
+	}
+	  out.println(gson.toJson(messageThreadsLog, MessageThreadsLog.class));
+	  out.close();
   }
   
   public Map<String, User> getUsers() {
@@ -119,7 +127,14 @@ public class LogReader {
   
   
   public void saveUsers(UserLog userLog) {
-	  logger.addToLog("UserLog.txt", gson.toJson(userLog, UserLog.class));
+	  PrintWriter out;
+	try {
+		out = new PrintWriter("UserLog.txt");
+	} catch (FileNotFoundException e) {
+		throw new RuntimeException("Failed to Save Users", e);
+	}
+	  out.println(gson.toJson(userLog, UserLog.class));
+	  out.close();
   }
 
   public Map<String, List<MessageThread>> getUserMessageThreads() {
@@ -132,6 +147,13 @@ public class LogReader {
   }
   
   public void saveUserMessageThreads(UserMessageThreadsLog userMessageThreadsLog) {
-	  logger.addToLog("UserMessageThreadsLog.txt", gson.toJson(userMessageThreadsLog, UserMessageThreadsLog.class));
+	  PrintWriter out;
+		try {
+			out = new PrintWriter("UserMessageThreadsLog.txt");
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException("Failed to Save Users", e);
+		}
+		  out.println(gson.toJson(userMessageThreadsLog, UserMessageThreadsLog.class));
+		  out.close();
   }
 }
