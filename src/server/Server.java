@@ -38,7 +38,7 @@ public class Server {
   private int portNumber;
 
   public static void main(String[] args) {
-    Server server = new Server(Integer.parseInt(args[1]));
+    Server server = new Server(Integer.parseInt(args[0]));
     server.start();
   }
 
@@ -209,6 +209,9 @@ public class Server {
               userMessageThreads.entrySet()
                   .forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
               logReader.saveUserMessageThreads(userMessageThreadsLog);
+              messageThreads.entrySet()
+                  .forEach(e -> messageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+              logReader.saveMessageThreads(messageThreadsLog);
               System.out.println("successfull CREATE_NEW_MESSAGE_THREAD case");
             }
             jsonBody = gson.toJson(mThread);

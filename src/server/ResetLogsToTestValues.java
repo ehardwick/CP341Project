@@ -14,6 +14,10 @@ import util.User;
 public class ResetLogsToTestValues {
   private LogReader logReader = new LogReader();
 
+  public static void main(String[] args) {
+    ResetLogsToTestValues rltv = new ResetLogsToTestValues();
+    rltv.trueMain();
+  }
   public void trueMain() {
     UserLog userLog = new UserLog();
     MessageThreadsLog messageThreadsLog = new MessageThreadsLog();
