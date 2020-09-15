@@ -33,6 +33,7 @@ public class Client {
   private Map<Long, Response> threadResponses;
 
   private Gson gson;
+  private int currentPort;
 
   public Client() {
     threadRequests = new HashMap<>();
@@ -47,6 +48,7 @@ public class Client {
     for (int port : portNumbers) {
       try {
         client = new Socket("127.0.0.1", port);
+        currentPort = port;
         break;
       } catch (Exception e) {
         System.out.println("failed to connect to port " + port);
@@ -90,6 +92,8 @@ public class Client {
     out.println(gson.toJson(request, Request.class));
     while (!threadResponses.containsKey(request.getId())) {
       if (System.currentTimeMillis() - startTime > 5000) {
+        System.out.println("going to restart");
+        System.out.println("current port is " + currentPort);
         start();
         newRequest(request);
       }

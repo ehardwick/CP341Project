@@ -42,6 +42,11 @@ public class Server {
   private static Set<PrintWriter> writers = new HashSet<>();
   LogReader logReader = new LogReader();
   private int portNumber;
+      
+  public static void main(String[] args) {
+    Server server = new Server(Integer.parseInt(args[1]));
+    server.start();
+  }
 
   public Server(int portNumber) {
     this.portNumber = portNumber;
