@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import util.Message;
@@ -19,9 +21,12 @@ import util.MessageProposal;
 import util.MessageThread;
 import util.MessageThreadList;
 import util.MessageThreadProposal;
+import util.MessageThreadsLog;
 import util.Request;
 import util.Response;
 import util.User;
+import util.UserLog;
+import util.UserMessageThreadsLog;
 
 public class Server {
   private static final String GET_MESSAGE_THREAD = "getMessageThread";
@@ -35,6 +40,7 @@ public class Server {
   private Map<String, List<MessageThread>> userMessageThreads;
 
   private static Set<PrintWriter> writers = new HashSet<>();
+  LogReader logReader = new LogReader();
   private int portNumber;
 
   public Server(int portNumber) {
@@ -42,7 +48,6 @@ public class Server {
   }
   
   public void start() {
-    LogReader logReader = new LogReader();
     messageThreads = logReader.getMessageThreads();
     users = logReader.getUsers();
     userMessageThreads = logReader.getUserMessageThreads();
@@ -72,6 +77,7 @@ public class Server {
     private PrintWriter out;
 
     private Gson gson;
+	private LogReader logReader;
 
     public ClientThread(Socket socket, Map<Long, MessageThread> messageThreads, Map<String, User> users, Map<String, List<MessageThread>> userMessageThreads) {
       this.messageThreads = messageThreads;
@@ -132,13 +138,20 @@ public class Server {
 
     // Handles all the different types of requests to the server
     // Yeah, this is just a gross switch statement. it sure isn't pretty but it works
+    
+    private UserLog userLog;
+    private MessageThreadsLog messageThreadsLog;
+    private UserMessageThreadsLog userMessageThreadsLog;
 
     public Response handleRequest(Request request) {
+	  userLog = new UserLog();
+      messageThreadsLog = new MessageThreadsLog();
+	  userMessageThreadsLog = new UserMessageThreadsLog();
       String jsonBody = "";
       boolean success = false;
       switch (request.getHeader()) {
         case GET_MESSAGE_THREAD:
-          try {
+          try {	
             MessageThread thread = gson.fromJson(request.getJsonBody(), MessageThread.class);
             if (messageThreads.containsKey(thread.getMessageThreadId())) {
               jsonBody = gson.toJson(messageThreads.get(thread.getMessageThreadId()));
@@ -159,6 +172,9 @@ public class Server {
               jsonBody = gson.toJson(messageThreadList);
               success = true;
               System.out.println("successfully did GET_MESSAGE_THREADS_BY_USER case");
+              
+              userMessageThreads.entrySet().forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+  			  logReader.saveUserMessageThreads(userMessageThreadsLog);
             }
           } catch (Exception e) {
             System.out.println("Getting a message threads by user broke");
@@ -179,6 +195,9 @@ public class Server {
             	jsonBody = gson.toJson(this.users.get(user.getUsername()));
                 success = true;
                 System.out.println("successfully did GET_USER case, created new user");
+                
+                users.entrySet().forEach(e -> userLog.putIfAbsent(e.getKey(), e.getValue()));
+    			logReader.saveUsers(userLog);
             }
           } catch (Exception e) {
             System.out.println("Getting user broke");
@@ -208,6 +227,9 @@ public class Server {
         				currList.add(mThread);
         			}
         			this.userMessageThreads.put(owner.getUsername(), currList);
+        			
+        			userMessageThreads.entrySet().forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+        			logReader.saveUserMessageThreads(userMessageThreadsLog);
         		}
         		jsonBody = gson.toJson(mThread);
                 success = true;
@@ -225,12 +247,15 @@ public class Server {
             Message message = messageProposal.getMessage();
 
             messageThreads.get(messageProposal.getMessageThreadId()).addMessage(message);
-            System.out.println("added message " + message.getTextBody() + " to message trhead " + messageThreads.get(messageProposal.getMessageThreadId()).getName());
+            System.out.println("added message " + message.getTextBody() + " to message thread " + messageThreads.get(messageProposal.getMessageThreadId()).getName());
 
             jsonBody = gson.toJson(message);
             success = true;
             
             System.out.println("successfully did new message case");
+            
+            messageThreads.entrySet().forEach(e -> messageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+            logReader.saveMessageThreads(messageThreadsLog);
 
           } catch (Exception e) {
             System.out.println("Adding a new message broke, darn");
