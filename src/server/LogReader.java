@@ -106,14 +106,17 @@ public class LogReader {
   }
   
   public void saveMessageThreads(MessageThreadsLog messageThreadsLog) {
-	  PrintWriter out;
-	try {
-		out = new PrintWriter("MessageThreadsLog.txt");
-	} catch (FileNotFoundException e) {
-		throw new RuntimeException("Failed to Save Users", e);
-	}
-	  out.println(gson.toJson(messageThreadsLog, MessageThreadsLog.class));
-	  out.close();
+	  while(true) {
+		  PrintWriter out;
+			try {
+				out = new PrintWriter("MessageThreadsLog.txt");
+				out.println(gson.toJson(messageThreadsLog, MessageThreadsLog.class));
+				out.close();
+				break;
+			} catch (FileNotFoundException e) {
+				throw new RuntimeException("Failed to Save Users", e);
+			}  
+	  }
   }
   
   public Map<String, User> getUsers() {
@@ -127,14 +130,17 @@ public class LogReader {
   
   
   public void saveUsers(UserLog userLog) {
-	  PrintWriter out;
-	try {
-		out = new PrintWriter("UserLog.txt");
-	} catch (FileNotFoundException e) {
-		throw new RuntimeException("Failed to Save Users", e);
-	}
-	  out.println(gson.toJson(userLog, UserLog.class));
-	  out.close();
+	  while(true) {
+		  PrintWriter out;
+			try {
+				out = new PrintWriter("UserLog.txt");
+				out.println(gson.toJson(userLog, UserLog.class));
+				out.close();
+				break;
+			} catch (FileNotFoundException e) {
+				throw new RuntimeException("Failed to Save Users", e);
+			}  
+	  }
   }
 
   public Map<String, List<MessageThread>> getUserMessageThreads() {
@@ -147,13 +153,16 @@ public class LogReader {
   }
   
   public void saveUserMessageThreads(UserMessageThreadsLog userMessageThreadsLog) {
-	  PrintWriter out;
-		try {
-			out = new PrintWriter("UserMessageThreadsLog.txt");
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException("Failed to Save Users", e);
-		}
-		  out.println(gson.toJson(userMessageThreadsLog, UserMessageThreadsLog.class));
-		  out.close();
-  }
+	  while(true) {
+		  PrintWriter out;
+			try {
+				out = new PrintWriter("UserMessageThreadsLog.txt");
+				out.println(gson.toJson(userMessageThreadsLog, UserMessageThreadsLog.class));
+				out.close();
+				break;
+			} catch (FileNotFoundException e) {
+				System.out.println("retrying race condition");
+			}
+	  }
+  }  
 }
