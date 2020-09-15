@@ -104,7 +104,7 @@ public class Server {
           while (in.ready()) {
             message = message + in.readLine();
           }
-          System.out.println("message at server: " + message);
+          System.out.println("Server recieved message: " + message);
           Request request = gson.fromJson(message, Request.class);
 
           message = gson.toJson(handleRequest(request));
@@ -145,10 +145,10 @@ public class Server {
             if (messageThreads.containsKey(thread.getMessageThreadId())) {
               jsonBody = gson.toJson(messageThreads.get(thread.getMessageThreadId()));
               success = true;
-              System.out.println("successfully did GET_MESSAGE_THREAD case");
+              System.out.println("successfull GET_MESSAGE_THREAD case");
             }
           } catch (Exception e) {
-            System.out.println("Getting a message thread broke :((( this is so sad");
+            System.out.println("failed GET_MESSAGE_THREAD case");
           }
           break;
 
@@ -160,10 +160,10 @@ public class Server {
               messageThreadList.setMessageThreads(userMessageThreads.get(user.getUsername()));
               jsonBody = gson.toJson(messageThreadList);
               success = true;
-              System.out.println("successfully did GET_MESSAGE_THREADS_BY_USER case");
+              System.out.println("successfull GET_MESSAGE_THREADS_BY_USER case");
             }
           } catch (Exception e) {
-            System.out.println("Getting a message threads by user broke");
+            System.out.println("failed GET_MESSAGE_THREADS_BY_USER case");
           }
           break;
 
@@ -173,21 +173,20 @@ public class Server {
             if (this.users.containsKey(user.getUsername())) {
               jsonBody = gson.toJson(this.users.get(user.getUsername()));
               success = true;
-              System.out.println("successfully did GET_USER case, grabbing existing user");
+              System.out.println("successfull GET_USER case, grabbing existing user");
             } else {
               this.users.put(user.getUsername(), user);
               this.userMessageThreads.put(user.getUsername(), new ArrayList<MessageThread>());
               jsonBody = gson.toJson(this.users.get(user.getUsername()));
               success = true;
-              System.out.println("successfully did GET_USER case, created new user");
+              System.out.println("successfull GET_USER case, creating new user");
             }
           } catch (Exception e) {
-            System.out.println("Getting user broke");
+            System.out.println("failed GET_USER case");
           }
           break;
 
         case CREATE_NEW_MESSAGE_THREAD:
-          // System.out.println("here2");
           try {
             MessageThreadProposal mtProposal =
                 gson.fromJson(request.getJsonBody(), MessageThreadProposal.class);
@@ -210,16 +209,16 @@ public class Server {
               userMessageThreads.entrySet()
                   .forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
               logReader.saveUserMessageThreads(userMessageThreadsLog);
+              System.out.println("successfull CREATE_NEW_MESSAGE_THREAD case");
             }
             jsonBody = gson.toJson(mThread);
             success = true;
           } catch (Exception e) {
-            System.out.println("poop");
+            System.out.println("failed CREATE_NEW_MESSAGE_THREAD case");
           }
           break;
 
         case SEND_NEW_MESSAGE:
-          System.out.println("here2");
           try {
             MessageProposal messageProposal =
                 gson.fromJson(request.getJsonBody(), MessageProposal.class);
@@ -228,8 +227,6 @@ public class Server {
 
             MessageThread messageThread = messageThreads.get(messageProposal.getMessageThreadId());
             messageThread.addMessage(message);
-            System.out.println("added message " + message.getTextBody() + " to message thread "
-                + messageThreads.get(messageProposal.getMessageThreadId()).getName());
 
             Map<String, List<MessageThread>> userMessageThreads = new HashMap<>();
             messageThreads.forEach((k, v) -> v.getOwners().forEach(owner -> {
@@ -241,24 +238,19 @@ public class Server {
                 userMessageThreads.put(owner.getUsername(), threads);
               }
             }));
-
             this.userMessageThreads = userMessageThreads;
-
             jsonBody = gson.toJson(message);
             success = true;
-
             System.out.println("successfully did new message case");
-
             messageThreads.entrySet()
                 .forEach(e -> messageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
             logReader.saveMessageThreads(messageThreadsLog);
-
             userMessageThreads.entrySet()
                 .forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
             logReader.saveUserMessageThreads(userMessageThreadsLog);
-
+            System.out.println("successfull SEND_NEW_MESSAGE case");
           } catch (Exception e) {
-            System.out.println("Adding a new message broke, darn");
+            System.out.println("failed SEND_NEW_MESSAGE case");
           }
           break;
       }

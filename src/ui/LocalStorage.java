@@ -158,9 +158,6 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
 
     if (response.isPresent()) {
       try {
-        System.out.println("got these threads: ");
-        gson.fromJson(response.get().getJsonBody(), MessageThreadList.class).getMessageThreads()
-            .forEach(thread -> System.out.println(thread.getName()));
         return Optional.of(gson.fromJson(response.get().getJsonBody(), MessageThreadList.class)
             .getMessageThreads());
       } catch (JsonSyntaxException e) {
@@ -226,12 +223,9 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   public Optional<MessageThread> createNewMessageThread(List<String> ownerUsernames, String name) {
     List<User> owners = new ArrayList<>();
     for (String ownerUsername : ownerUsernames) {
-      //System.out.println("VIKTOR: " + users);
       Optional<User> maybeUser = getServerUser(ownerUsername);
       if (maybeUser.isPresent()) {
         owners.add(maybeUser.get());
-      } else {
-        System.out.println("failed to find user " + ownerUsername);
       }
     }
     owners.add(clientUser);
@@ -296,7 +290,7 @@ public class LocalStorage implements MessageObserver, MessageThreadObserver {
   public void setMessageThreads(Map<Long, MessageThread> messageThreads) {
     this.messageThreads = messageThreads;
   }
-  
+
   public void setUsers(Map<String, User> users) {
     this.users = users;
   }

@@ -9,10 +9,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import util.Message;
-import util.MessageThread;
 import util.User;
 
 @SuppressWarnings("serial")

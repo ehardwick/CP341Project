@@ -1,9 +1,7 @@
 package util;
 
-import java.util.Date;
-
 public class MessageProposal {
-  
+
   private long messageThreadId;
   private Message message;
 
@@ -32,7 +30,7 @@ public class MessageProposal {
   public long getMessageThreadId() {
     return messageThreadId;
   }
-  
+
   public Message getMessage() {
     return message;
   }

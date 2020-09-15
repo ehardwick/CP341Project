@@ -12,8 +12,7 @@ public class UserInfoPanel extends JPanel implements MessageThreadObserver {
 
   public UserInfoPanel(LocalStorage localStorage) {
     this.localStorage = localStorage;
-    JTextArea textArea = new JTextArea("Username: " + localStorage.getClientUser().getUsername()
-        + "\nUserId: DNE");
+    JTextArea textArea = new JTextArea("Username: " + localStorage.getClientUser().getUsername());
     textArea.setOpaque(false);
     textArea.setEditable(false);
     textArea.setFocusable(false);
@@ -22,10 +21,7 @@ public class UserInfoPanel extends JPanel implements MessageThreadObserver {
   }
 
   @Override
-  public void addNewMessageThread(MessageThread newThread) {
-    // nothing yet will want to switch automaticaly
-
-  }
+  public void addNewMessageThread(MessageThread newThread) {}
 
   @Override
   public void threadSwitched(long messageThreadId) {

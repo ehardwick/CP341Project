@@ -68,8 +68,6 @@ public class InputPanel extends JPanel implements ChangeListener, MessageThreadO
 
   @Override
   public void addNewMessageThread(MessageThread newThread) {
-    // TODO Auto-generated method stub
-    
   }
 
 }

@@ -1,6 +1,5 @@
 package ui;
 
-import java.awt.Container;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +27,6 @@ public class UiFrame extends JFrame {
   UserInfoPanel userInfoPanel;
   LoginPanel loginPanel;
 
-  //
   private LocalStorage localStorage;
 
   public UiFrame() {
@@ -36,7 +34,7 @@ public class UiFrame extends JFrame {
     this.gbc = new GridBagConstraints();
 
     setLayout(grid);
-    setTitle("Messaging Client UI Test");
+    setTitle("Messaging Client UI");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
@@ -47,14 +45,14 @@ public class UiFrame extends JFrame {
   public void setUser(User user) {
     this.user = user;
     this.localStorage = new LocalStorage.Builder().withUser(user).build();
-    
+
     List<MessageThread> threads = localStorage.getServerMessageThreadsByUser(user).get();
 
     Map<Long, MessageThread> threadsMap = new HashMap<>();
     threads.forEach(thread -> threadsMap.put(thread.getMessageThreadId(), thread));
 
     localStorage.setMessageThreads(threadsMap);
-    
+
 
     setupChatPanels();
     displayChatPanels();
@@ -172,13 +170,4 @@ public class UiFrame extends JFrame {
     validate();
     repaint();
   }
-
-  public void setMessageThreads(List<MessageThread> messageThreads) {
-    chatsPanel.setMessageThreads(messageThreads);
-  }
-
-  public User getUser() {
-    return user;
-  }
-
 }

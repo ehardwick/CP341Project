@@ -22,21 +22,17 @@ import util.User;
 
 public class Client {
 
-  private int PORT = 0;
-
   private int[] portNumbers = {8888, 8000};
 
   private PrintWriter out;
   private BufferedReader serverIn;
 
-  private Map<Long, Thread> threadRequests;
   private Map<Long, Response> threadResponses;
 
   private Gson gson;
   private int currentPort;
 
   public Client() {
-    threadRequests = new HashMap<>();
     threadResponses = new HashMap<>();
     GsonBuilder builder = new GsonBuilder();
     builder.setPrettyPrinting();
@@ -54,10 +50,6 @@ public class Client {
         System.out.println("failed to connect to port " + port);
       }
     }
-    if (client == null) {
-      throw new RuntimeException("Was never able to find a port to connect to");
-    }
-
     try {
       out = new PrintWriter(client.getOutputStream(), true);
       serverIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -74,31 +66,25 @@ public class Client {
           }
           Response response = gson.fromJson(message, Response.class);
           threadResponses.put(response.getId(), response);
-          // TODO read message, check which requestId it has, throw it in the soup (aka put the
-          // response Object into the threadResponse map and notify the request thread)
           System.out.println(message);
         } catch (IOException e) {
           throw new RuntimeException("Failed to Read Server Input", e);
         }
       }
     });
-
     readMessage.start();
   }
 
   public Optional<Response> newRequest(Request request) {
     long startTime = System.currentTimeMillis();
-
     out.println(gson.toJson(request, Request.class));
     while (!threadResponses.containsKey(request.getId())) {
       if (System.currentTimeMillis() - startTime > 5000) {
-        System.out.println("going to restart");
-        System.out.println("current port is " + currentPort);
+        System.out.println("Client is restarting, leaving port: " + currentPort);
         start();
         newRequest(request);
       }
     }
-
     return threadResponses.containsKey(request.getId())
         ? Optional.of(threadResponses.get(request.getId()))
         : Optional.empty();

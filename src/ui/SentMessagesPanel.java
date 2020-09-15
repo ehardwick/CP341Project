@@ -9,8 +9,6 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import util.Message;
 import util.MessageThread;
-import util.Request;
-import util.Response;
 import util.User;
 
 @SuppressWarnings("serial")
@@ -49,15 +47,16 @@ public class SentMessagesPanel extends JPanel implements MessageObserver, Messag
     }
 
     public void run() {
-      Optional<MessageThread> switchedToThread = localStorage.getServerMessageThread(messageThreadId);
+      Optional<MessageThread> switchedToThread =
+          localStorage.getServerMessageThread(messageThreadId);
 
       switchedToThread.ifPresent(thread -> {
         tableModel.setRowCount(0);
         thread.getMessages().forEach(message -> {
           if (user.getUsername().equals(message.getSender().getUsername())) {
-            addFromMessage(message.getTextBody() + " (" + message.getStatus() + ")");
+            addFromMessage(message.getTextBody());
           } else {
-            addToMessage(message.getTextBody() + " (" + message.getStatus() + ")");
+            addToMessage(message.getTextBody());
           }
         });
         table.changeSelection(table.getRowCount() - 1, 0, false, false);

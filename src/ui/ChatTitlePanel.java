@@ -1,8 +1,6 @@
 package ui;
 
 import java.util.Optional;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import util.MessageThread;
@@ -16,21 +14,18 @@ public class ChatTitlePanel extends JPanel implements MessageThreadObserver {
 
   public ChatTitlePanel(LocalStorage localStorage) {
     this.localStorage = localStorage;
-    this.titleText = new JTextArea(chatTitle + "\n" + chatOwners);
+    this.titleText = new JTextArea(chatTitle + "\n Chat Owners: " + chatOwners);
 
     titleText.setOpaque(false);
     titleText.setEditable(false);
     titleText.setFocusable(false);
     titleText.setAlignmentX(CENTER_ALIGNMENT);
-    
+
     add(titleText);
   }
 
   @Override
-  public void addNewMessageThread(MessageThread newThread) {
-    // nothing yet will want to switch automatically
-
-  }
+  public void addNewMessageThread(MessageThread newThread) {}
 
   @Override
   public void threadSwitched(long messageThreadId) {

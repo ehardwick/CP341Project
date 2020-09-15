@@ -11,10 +11,6 @@ public class UserLog {
     users = new HashMap<>();
   }
 
-  public UserLog(Map<String, User> users) {
-    this.users = users;
-  }
-
   public Map<String, User> getMap() {
     return users;
   }
