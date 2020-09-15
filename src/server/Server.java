@@ -8,12 +8,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import util.Message;
@@ -34,15 +33,10 @@ public class Server {
   private static final String GET_USER = "getUser";
   private static final String CREATE_NEW_MESSAGE_THREAD = "createNewMessageThread";
   private static final String SEND_NEW_MESSAGE = "sendNewMessage";
-  
-  private Map<Long, MessageThread> messageThreads;
-  private Map<String, User> users;
-  private Map<String, List<MessageThread>> userMessageThreads;
 
   private static Set<PrintWriter> writers = new HashSet<>();
-  LogReader logReader = new LogReader();
   private int portNumber;
-      
+
   public static void main(String[] args) {
     Server server = new Server(Integer.parseInt(args[1]));
     server.start();
@@ -51,18 +45,15 @@ public class Server {
   public Server(int portNumber) {
     this.portNumber = portNumber;
   }
-  
+
   public void start() {
-    messageThreads = logReader.getMessageThreads();
-    users = logReader.getUsers();
-    userMessageThreads = logReader.getUserMessageThreads();
     System.out.println(String.format("Server is online, listening on port %s", portNumber));
     Socket socket;
     try {
       ServerSocket serverSocket = new ServerSocket(portNumber);
       while (true) {
         socket = serverSocket.accept();
-        new ClientThread(socket, messageThreads, users, userMessageThreads).start();
+        new ClientThread(socket).start();
       }
     } catch (IOException e) {
       throw new RuntimeException("Failed to connect to new Server Socket", e);
@@ -70,11 +61,11 @@ public class Server {
   }
 
   private static class ClientThread extends Thread {
-
+    private LogReader logReader = new LogReader();
     // Server has all the message threads and all the users
-    private Map<Long, MessageThread> messageThreads;
-    private Map<String, User> users;
-    private Map<String, List<MessageThread>> userMessageThreads;
+    private Map<Long, MessageThread> messageThreads = logReader.getMessageThreads();
+    private Map<String, User> users = logReader.getUsers();
+    private Map<String, List<MessageThread>> userMessageThreads = logReader.getUserMessageThreads();
 
     // Socket used for a conversation
     private final Socket socket;
@@ -82,31 +73,19 @@ public class Server {
     private PrintWriter out;
 
     private Gson gson;
-	private LogReader logReader;
 
-    public ClientThread(Socket socket, Map<Long, MessageThread> messageThreads, Map<String, User> users, Map<String, List<MessageThread>> userMessageThreads) {
-      this.messageThreads = messageThreads;
-      this.users = users;
-      this.userMessageThreads = userMessageThreads;
+    public ClientThread(Socket socket) {
       this.socket = socket;
       this.gson = new GsonBuilder().setPrettyPrinting().create();
-      this.logReader = new LogReader();
-
-
-//      LogReader logReader = new LogReader();
-//      this.messageThreads = logReader.getMessageThreads();
-//      users = logReader.getUsers();
-//      userMessageThreads = logReader.getUserMessageThreads();
     }
-    
-    /* 
-     * returns the next available message thread ID
-     * TODO: handle race condition!!!
+
+    /*
+     * returns the next available message thread ID TODO: handle race condition!!!
      */
     private Long nextMessageThreadId() {
-    	List<Long> keyList = new ArrayList<Long>(this.messageThreads.keySet());
-    	Collections.reverse(keyList);
-    	return (keyList.get(0) + 1);
+      List<Long> keyList = new ArrayList<Long>(this.messageThreads.keySet());
+      Collections.reverse(keyList);
+      return (keyList.get(0) + 1);
     }
 
     public void run() {
@@ -145,20 +124,23 @@ public class Server {
 
     // Handles all the different types of requests to the server
     // Yeah, this is just a gross switch statement. it sure isn't pretty but it works
-    
+
     private UserLog userLog;
     private MessageThreadsLog messageThreadsLog;
     private UserMessageThreadsLog userMessageThreadsLog;
 
     public Response handleRequest(Request request) {
-	  userLog = new UserLog();
+      this.messageThreads = logReader.getMessageThreads();
+      this.users = logReader.getUsers();
+      this.userMessageThreads = logReader.getUserMessageThreads();
+      userLog = new UserLog();
       messageThreadsLog = new MessageThreadsLog();
-	  userMessageThreadsLog = new UserMessageThreadsLog();
+      userMessageThreadsLog = new UserMessageThreadsLog();
       String jsonBody = "";
       boolean success = false;
       switch (request.getHeader()) {
         case GET_MESSAGE_THREAD:
-          try {	
+          try {
             MessageThread thread = gson.fromJson(request.getJsonBody(), MessageThread.class);
             if (messageThreads.containsKey(thread.getMessageThreadId())) {
               jsonBody = gson.toJson(messageThreads.get(thread.getMessageThreadId()));
@@ -169,7 +151,7 @@ public class Server {
             System.out.println("Getting a message thread broke :((( this is so sad");
           }
           break;
-          
+
         case GET_MESSAGE_THREADS_BY_USER:
           try {
             User user = gson.fromJson(request.getJsonBody(), User.class);
@@ -179,15 +161,12 @@ public class Server {
               jsonBody = gson.toJson(messageThreadList);
               success = true;
               System.out.println("successfully did GET_MESSAGE_THREADS_BY_USER case");
-              
-              userMessageThreads.entrySet().forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
-  			  logReader.saveUserMessageThreads(userMessageThreadsLog);
             }
           } catch (Exception e) {
             System.out.println("Getting a message threads by user broke");
           }
           break;
-          
+
         case GET_USER:
           try {
             User user = gson.fromJson(request.getJsonBody(), User.class);
@@ -195,56 +174,50 @@ public class Server {
               jsonBody = gson.toJson(this.users.get(user.getUsername()));
               success = true;
               System.out.println("successfully did GET_USER case, grabbing existing user");
-            }
-            else {
-            	this.users.put(user.getUsername(), user);
-            	this.userMessageThreads.put(user.getUsername(), new ArrayList<MessageThread>());
-            	jsonBody = gson.toJson(this.users.get(user.getUsername()));
-                success = true;
-                System.out.println("successfully did GET_USER case, created new user");
-                
-                users.entrySet().forEach(e -> userLog.putIfAbsent(e.getKey(), e.getValue()));
-    			logReader.saveUsers(userLog);
+            } else {
+              this.users.put(user.getUsername(), user);
+              this.userMessageThreads.put(user.getUsername(), new ArrayList<MessageThread>());
+              jsonBody = gson.toJson(this.users.get(user.getUsername()));
+              success = true;
+              System.out.println("successfully did GET_USER case, created new user");
             }
           } catch (Exception e) {
             System.out.println("Getting user broke");
           }
           break;
-          
+
         case CREATE_NEW_MESSAGE_THREAD:
-          //System.out.println("here2");
-        	try {
-        		MessageThreadProposal mtProposal = 
-        			gson.fromJson(request.getJsonBody(), MessageThreadProposal.class);
-        		MessageThread mThread = new MessageThread.Builder()
-    				.withOwners(mtProposal.getOwners())
-    				.withName(mtProposal.getName())
-    				.withMessageThreadId(this.nextMessageThreadId())
-    				.build();
-        		// add new thread to messageThreads
-        		this.messageThreads.put(this.nextMessageThreadId(), mThread);
-        		// add new thread to each owner's list of messageThreads (or make new list and add it)
-        		for (User owner : mtProposal.getOwners()) {
-        			List<MessageThread> currList = this.userMessageThreads.get(owner.getUsername());
-        			if (currList == null) {
-        				currList = new ArrayList<MessageThread>();
-        				currList.add(mThread);	
-        			}
-        			else {
-        				currList.add(mThread);
-        			}
-        			this.userMessageThreads.put(owner.getUsername(), currList);
-        			
-        			userMessageThreads.entrySet().forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
-        			logReader.saveUserMessageThreads(userMessageThreadsLog);
-        		}
-        		jsonBody = gson.toJson(mThread);
-                success = true;
-        	} catch (Exception e) {
-        		System.out.println("poop");
-        	}
+          // System.out.println("here2");
+          try {
+            MessageThreadProposal mtProposal =
+                gson.fromJson(request.getJsonBody(), MessageThreadProposal.class);
+            MessageThread mThread = new MessageThread.Builder().withOwners(mtProposal.getOwners())
+                .withName(mtProposal.getName()).withMessageThreadId(this.nextMessageThreadId())
+                .build();
+            // add new thread to messageThreads
+            this.messageThreads.put(this.nextMessageThreadId(), mThread);
+            // add new thread to each owner's list of messageThreads (or make new list and add it)
+            for (User owner : mtProposal.getOwners()) {
+              List<MessageThread> currList = this.userMessageThreads.get(owner.getUsername());
+              if (currList == null) {
+                currList = new ArrayList<MessageThread>();
+                currList.add(mThread);
+              } else {
+                currList.add(mThread);
+              }
+              this.userMessageThreads.put(owner.getUsername(), currList);
+
+              userMessageThreads.entrySet()
+                  .forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+              logReader.saveUserMessageThreads(userMessageThreadsLog);
+            }
+            jsonBody = gson.toJson(mThread);
+            success = true;
+          } catch (Exception e) {
+            System.out.println("poop");
+          }
           break;
-          
+
         case SEND_NEW_MESSAGE:
           System.out.println("here2");
           try {
@@ -253,16 +226,36 @@ public class Server {
 
             Message message = messageProposal.getMessage();
 
-            messageThreads.get(messageProposal.getMessageThreadId()).addMessage(message);
-            System.out.println("added message " + message.getTextBody() + " to message thread " + messageThreads.get(messageProposal.getMessageThreadId()).getName());
+            MessageThread messageThread = messageThreads.get(messageProposal.getMessageThreadId());
+            messageThread.addMessage(message);
+            System.out.println("added message " + message.getTextBody() + " to message thread "
+                + messageThreads.get(messageProposal.getMessageThreadId()).getName());
+
+            Map<String, List<MessageThread>> userMessageThreads = new HashMap<>();
+            messageThreads.forEach((k, v) -> v.getOwners().forEach(owner -> {
+              if (userMessageThreads.containsKey(owner.getUsername())) {
+                userMessageThreads.get(owner.getUsername()).add(v);
+              } else {
+                List<MessageThread> threads = new ArrayList<>();
+                threads.add(v);
+                userMessageThreads.put(owner.getUsername(), threads);
+              }
+            }));
+
+            this.userMessageThreads = userMessageThreads;
 
             jsonBody = gson.toJson(message);
             success = true;
-            
+
             System.out.println("successfully did new message case");
-            
-            messageThreads.entrySet().forEach(e -> messageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+
+            messageThreads.entrySet()
+                .forEach(e -> messageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
             logReader.saveMessageThreads(messageThreadsLog);
+
+            userMessageThreads.entrySet()
+                .forEach(e -> userMessageThreadsLog.putIfAbsent(e.getKey(), e.getValue()));
+            logReader.saveUserMessageThreads(userMessageThreadsLog);
 
           } catch (Exception e) {
             System.out.println("Adding a new message broke, darn");
