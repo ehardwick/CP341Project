@@ -90,6 +90,8 @@ public class Server {
       this.userMessageThreads = userMessageThreads;
       this.socket = socket;
       this.gson = new GsonBuilder().setPrettyPrinting().create();
+      this.logReader = new LogReader();
+
 
 //      LogReader logReader = new LogReader();
 //      this.messageThreads = logReader.getMessageThreads();
